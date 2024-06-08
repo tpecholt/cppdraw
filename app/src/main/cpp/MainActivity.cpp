@@ -4,6 +4,7 @@
 #include "MainActivity.h"
 #include "InputQuery.h"
 #include "MessageBox.h"
+#include "OpenFileActivity.h"
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -23,7 +24,22 @@ void MainActivity::Open()
 
 void MainActivity::Init()
 {
-    // TODO: Add your code here
+    if (fileName == "") {
+        textEdit.SetText("");
+        return;
+    }
+    std::ifstream fin(fileName);
+    if (!fin) {
+        messageBox.buttons = ImRad::Ok;
+        messageBox.message = "Can't read '" + fileName + "'";
+        messageBox.OpenPopup();
+        return;
+    }
+    std::string line;
+    std::string content;
+    while (std::getline(fin, line))
+        content += line + "\n";
+    textEdit.SetText(content);
 }
 
 void MainActivity::Draw()
@@ -115,7 +131,7 @@ void MainActivity::Draw()
         /// @end MenuIt
 
         /// @begin Child
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 10*dp, 5*dp });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 5*dp, 5*dp });
         ImGui::PushStyleColor(ImGuiCol_ChildBg, 0xff323432);
         ImGui::BeginChild("child1", { -1, 40*dp }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoSavedSettings);
         {
@@ -175,7 +191,7 @@ void MainActivity::Draw()
         /// @end CustomWidget
 
         /// @begin Child
-        if (ioUserData->kbdShown && !ImGui::GetTopMostAndVisiblePopupModal())
+        if (!ImGui::GetTopMostAndVisiblePopupModal()&&ioUserData->kbdShown)
         {
             //visible
             ImGui::PushStyleColor(ImGuiCol_ChildBg, 0xff663300);
@@ -281,6 +297,10 @@ void MainActivity::Draw()
 
 void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
 {
+    if (fileName == "") {
+        return;
+    }
+
     //need to keep it focused even when button is down (not pressed yet)
     if (setFocus) {
         setFocus = false;
@@ -339,24 +359,17 @@ void MainActivity::OnButtonFocused()
 
 void MainActivity::OnRun()
 {
-    fileName = fileName + "R";
+    //fileName = fileName + "R";
 }
 
 void MainActivity::OnFileNew()
 {
-    inputQuery.label = "Enter file name:";
-    inputQuery.value = "";
-    inputQuery.OpenPopup([this](ImRad::ModalResult) {
-        if (fs::exists(homeDir + "/" + inputQuery.value)) {
-            messageBox.message = "'" + inputQuery.value + "' already exists. Overwrite?";
-            messageBox.OpenPopup([this](ImRad::ModalResult) {
-                DoNewFile(inputQuery.value);
-            });
-        }
-        else {
-            DoNewFile(inputQuery.value);
-        }
-    });
+    const char* SRC_TEMPLATE =
+            "#include \"cppdraw.h\"\n\nvoid Draw(float time)\n{\n\t//Add your code here\n}\n";
+    if (fileName != "")
+        SaveFile(fileName);
+    textEdit.SetText(SRC_TEMPLATE);
+    OnFileSaveAs();
 }
 
 void MainActivity::OnFileSaveAs()
@@ -364,32 +377,61 @@ void MainActivity::OnFileSaveAs()
     inputQuery.label = "Enter file name:";
     inputQuery.value = "";
     inputQuery.OpenPopup([this](ImRad::ModalResult) {
-        if (fs::exists(homeDir + "/" + inputQuery.value)) {
-            messageBox.message = "'" + inputQuery.value + "' already exists. Overwrite?";
-            messageBox.OpenPopup([this](ImRad::ModalResult) {
-                DoSaveAs(inputQuery.value);
+        std::string fn = inputQuery.value;
+        if (fn.find(".") == std::string::npos)
+            fn += ".cpp";
+        if (fs::exists(/*homeDir + "/" +*/ fn)) {
+            messageBox.buttons = ImRad::Yes | ImRad::No;
+            messageBox.message = "'" + fn + "' already exists. Overwrite?";
+            messageBox.OpenPopup([this,fn](ImRad::ModalResult mr) {
+                if (mr == ImRad::Yes)
+                    SaveFile(fn);
             });
         }
         else {
-            DoSaveAs(inputQuery.value);
+            SaveFile(fn);
         }
     });
 }
 
 void MainActivity::OnFileOpen()
 {
+    if (fileName != "")
+        SaveFile(fileName);
+    openFileActivity.Open();
 }
 
 void MainActivity::OnFileDelete()
 {
+    messageBox.buttons = ImRad::Yes | ImRad::No;
+    messageBox.message = "Really delete '" + fileName + "'?";
+    messageBox.OpenPopup([this](ImRad::ModalResult mr) {
+        if (mr == ImRad::Yes) {
+            std::error_code ec;
+            fs::remove(fileName, ec);
+            if (ec) {
+                messageBox.buttons = ImRad::Ok;
+                messageBox.message = "Error: can't remove '" + fileName + "'";
+                messageBox.OpenPopup();
+                return;
+            }
+            fileName = "";
+        }
+    });
 }
 
-void MainActivity::DoNewFile(const std::string& fname)
+void MainActivity::SaveFile(const std::string& fname)
 {
-    fileName = fname;
-}
-
-void MainActivity::DoSaveAs(const std::string& fname)
-{
+    std::string path = fname; //homeDir + "/" + fname;
+    if (fname.find(".") == std::string::npos)
+        path += ".cpp";
+    std::ofstream fout(path);
+    if (!fout) {
+        messageBox.buttons = ImRad::Ok;
+        messageBox.message = "Error: can't write in '" + path + "'";
+        messageBox.OpenPopup();
+        return;
+    }
+    fout << textEdit.GetText();
     fileName = fname;
 }

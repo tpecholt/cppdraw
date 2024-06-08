@@ -38,6 +38,7 @@ void MessageBox::Draw()
     ID = ImGui::GetID("###MessageBox");
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 10*dp, 10*dp });
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 10*dp, 5*dp });
+    ImGui::SetNextWindowPos(ioUserData->WorkRect().GetCenter(), 0, { 0.5f, 0.5f }); //Center
     ImGui::SetNextWindowSize({ 0, 0 }); //{ 640*dp, 480*dp }
     bool tmpOpen = true;
     if (ImGui::BeginPopupModal("title###MessageBox", &tmpOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))

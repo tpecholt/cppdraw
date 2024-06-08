@@ -36,8 +36,7 @@ private:
     TextEditor textEdit;
     /// @end impl
 
-    void DoSaveAs(const std::string& fname);
-    void DoNewFile(const std::string& fname);
+    void SaveFile(const std::string& fname);
 };
 
 extern MainActivity mainActivity;

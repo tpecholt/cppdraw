@@ -30,6 +30,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         InputQuery.cpp
         MainActivity.cpp
         MessageBox.cpp
+        OpenFileActivity.cpp
         TextEditor.cpp
         # 
         imgui/imgui.cpp

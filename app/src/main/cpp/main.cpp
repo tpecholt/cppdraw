@@ -10,8 +10,12 @@
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 #include <string>
+#include <filesystem>
 
 #include "MainActivity.h"
+#include "OpenFileActivity.h"
+
+namespace fs = std::filesystem;
 
 // Data
 static EGLDisplay           g_EglDisplay = EGL_NO_DISPLAY;
@@ -43,6 +47,7 @@ static void UpdateScreenRect();
 void Draw()
 {
 	mainActivity.Draw();
+    openFileActivity.Draw();
 }
 
 //-----------------------------------------------------------------
@@ -215,6 +220,9 @@ void Init(struct android_app* app)
         //mainActivity.homeDir = app->activity->internalDataPath;
         g_IniFilename = std::string(app->activity->internalDataPath) + "/imgui.ini";
         io.IniFilename = g_IniFilename.c_str();
+        //mainActivity.homeDir = app->activity->internalDataPath;
+        std::error_code ec;
+        fs::current_path(app->activity->internalDataPath, ec);
 
         // Setup Platform/Renderer backends
         ImGui_ImplAndroid_Init(g_App->window);
@@ -256,7 +264,7 @@ void Init(struct android_app* app)
                                               g_IOUserData.dpiScale * 20.0f, &cfg, icons_ranges);
         IM_ASSERT(font != nullptr);
 
-        mainActivity.Open();
+        openFileActivity.Open();
     }
 }
 
