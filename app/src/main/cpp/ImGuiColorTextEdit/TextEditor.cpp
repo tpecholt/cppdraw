@@ -964,13 +964,14 @@ void TextEditor::Render()
 			if (mState.mCursorPosition.mLine == lineNo)
 			{
 				auto focused = ImGui::IsWindowFocused();
+				float dpiScale = ImGui::GetFontSize() / 10.f;
 
 				// Highlight the current line (where the cursor is)
 				if (!HasSelection())
 				{
 					auto end = ImVec2(start.x + contentSize.x + scrollX, start.y + mCharAdvance.y);
 					drawList->AddRectFilled(start, end, mPalette[(int)(focused ? PaletteIndex::CurrentLineFill : PaletteIndex::CurrentLineFillInactive)]);
-					drawList->AddRect(start, end, mPalette[(int)PaletteIndex::CurrentLineEdge], 1.0f);
+					drawList->AddRect(start, end, mPalette[(int)PaletteIndex::CurrentLineEdge], 0, 0, 1.0f * dpiScale);
 				}
 
 				// Render the cursor
@@ -980,7 +981,6 @@ void TextEditor::Render()
 					auto elapsed = timeEnd - mStartTime;
 					if (elapsed > 400)
 					{
-						float dpiScale = ImGui::GetFontSize() / 10.f;
 						float width = 1.0f * dpiScale;
 						auto cindex = GetCharacterIndex(mState.mCursorPosition);
 						float cx = TextDistanceToLineStart(mState.mCursorPosition);

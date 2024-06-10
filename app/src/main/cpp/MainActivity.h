@@ -16,7 +16,7 @@ public:
     std::string fileName;
     bool darkMode = false;
     bool retroMode = false;
-    bool vsMode = true;
+    bool lightMode = true;
     /// @end interface
 
 private:
@@ -38,6 +38,7 @@ private:
 
     bool setFocus;
     TextEditor textEdit;
+    TextEditor::Palette lightPalette, darkPalette, retroPalette;
     /// @end impl
 
     void DoSaveFile(const std::string& fname);

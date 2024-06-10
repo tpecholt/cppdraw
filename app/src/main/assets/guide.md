@@ -16,7 +16,11 @@ void *circle*(float x, float y, float radius);
 
 void *color*(sf::Color c);
 
-void *convexPoly*(std::vector<Sf::Vector2d>& coords);
+void *convexPoly*(std::span<Sf::Vector2d> coords);
+
+float *maxX*();
+
+float *maxY*();
 
 void *line*(float x1, float y1, float x2, float y2);
 
@@ -24,7 +28,7 @@ void *rectangle*(float x, float y, float w, float h);
 
 void *text*(float x, float y, std::string_view str);
 
-auto *textExtent*(std::string_view str) -> Sf::Vector2f;
+auto *textExtents*(std::string_view str) -> Sf::Vector2f;
 
 void *textStyle*(std::string_view fontName, float size);
 

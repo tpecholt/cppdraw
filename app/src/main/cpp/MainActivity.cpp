@@ -41,6 +41,21 @@ void MainActivity::Init()
     while (std::getline(fin, line))
         content += line + "\n";
     textEdit.SetText(content);
+
+    int c = (int)TextEditor::PaletteIndex::Cursor;
+    lightPalette = TextEditor::GetLightPalette();
+    lightPalette[(int) TextEditor::PaletteIndex::CurrentLineFill] = 0x00000000;
+    lightPalette[c] = TextEditor::GetRetroBluePalette()[c];
+    lightPalette[(int) TextEditor::PaletteIndex::LineNumber] &= 0x7fffffff;
+    lightPalette[(int)TextEditor::PaletteIndex::CurrentLineEdge] = 0xffe0e0e0;
+
+    darkPalette = TextEditor::GetDarkPalette();
+    darkPalette[c] = TextEditor::GetRetroBluePalette()[c];
+    darkPalette[(int) TextEditor::PaletteIndex::LineNumber] &= 0x7fffffff;
+
+    retroPalette = TextEditor::GetRetroBluePalette();
+    retroPalette[c] = TextEditor::GetRetroBluePalette()[c];
+    retroPalette[(int) TextEditor::PaletteIndex::LineNumber] &= 0x8fffffff;
 }
 
 void MainActivity::Draw()
@@ -109,7 +124,7 @@ void MainActivity::Draw()
             /// @separator
 
             /// @begin MenuIt
-            if (ImGui::MenuItem("VS Mode", "", &vsMode))
+            if (ImGui::MenuItem("Light Mode", "", &lightMode))
                 OnVSMode();
             /// @end MenuIt
 
@@ -158,7 +173,7 @@ void MainActivity::Draw()
 
                 /// @begin Text
                 ImGui::AlignTextToFramePadding();
-                ImGui::TextUnformatted(ImRad::Format("{}", fileName).c_str());
+                ImGui::TextUnformatted(ImRad::Format(" {}", fileName).c_str());
                 /// @end Text
 
                 /// @begin Button
@@ -316,9 +331,8 @@ void MainActivity::Draw()
 
 void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
 {
-    if (fileName == "") {
+    if (fileName == "")
         return;
-    }
 
     //need to keep it focused even when button is down (not pressed yet)
     if (setFocus) {
@@ -327,9 +341,11 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
     }
 
     textEdit.SetImGuiChildIgnored(true);
-    textEdit.SetPalette(vsMode ? TextEditor::GetLightPalette() :
-                        darkMode ? TextEditor::GetDarkPalette() :
-                        TextEditor::GetRetroBluePalette());
+    textEdit.SetLanguageDefinition(TextEditor::LanguageDefinition::CPlusPlus());
+    textEdit.SetShowWhitespaces(false);
+    textEdit.SetPalette(lightMode ? lightPalette :
+                        darkMode ? darkPalette :
+                        retroPalette);
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, textEdit.GetPalette()[(int)TextEditor::PaletteIndex::Background]);
     ImGui::BeginChild("textEdit", args.size);
@@ -389,7 +405,7 @@ void MainActivity::OnRun()
 void MainActivity::OnFileNew()
 {
     const char* SRC_TEMPLATE =
-            "#include \"cppdraw.h\"\n\nvoid draw(float time)\n{\n\t//Add your code here\n}\n";
+            "#include \"cppdraw.h\"\n\nvoid draw(float time)\n{\n\n}\n";
     if (fileName != "")
         DoSaveFile(fileName);
     textEdit.SetText(SRC_TEMPLATE);
@@ -446,20 +462,20 @@ void MainActivity::OnFileDelete()
 
 void MainActivity::OnVSMode()
 {
-    vsMode = true;
+    lightMode = true;
     retroMode = darkMode = false;
 }
 
 void MainActivity::OnDarkMode()
 {
     darkMode = true;
-    retroMode = vsMode = false;
+    retroMode = lightMode = false;
 }
 
 void MainActivity::OnRetroMode()
 {
     retroMode = true;
-    vsMode = darkMode = false;
+    lightMode = darkMode = false;
 }
 
 void MainActivity::OnHelp()

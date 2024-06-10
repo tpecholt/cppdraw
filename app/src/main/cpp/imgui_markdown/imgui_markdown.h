@@ -993,11 +993,11 @@ namespace ImGui
                 if( fmt.separator )
                 {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, markdownFormatInfo_.config->separatorThickness);
-                    ImGui::NewLine();
+                    //ImGui::NewLine();
                 }
                 else
                 {
-                    ImGui::NewLine();
+                    //ImGui::NewLine();
                 }
                 if( fmt.font )
                 {
