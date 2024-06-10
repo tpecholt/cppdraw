@@ -3,7 +3,7 @@
 
 #pragma once
 #include "imrad.h"
-#include "TextEditor.h"
+#include "ImGuiColorTextEdit/TextEditor.h"
 
 class MainActivity
 {
@@ -13,10 +13,10 @@ public:
 
     void Draw();
 
-    std::string homeDir;
     std::string fileName;
-    bool darkMode = true;
+    bool darkMode = false;
     bool retroMode = false;
+    bool vsMode = true;
     /// @end interface
 
 private:
@@ -31,12 +31,16 @@ private:
     void OnFileOpen();
     void OnFileSaveAs();
     void OnFileDelete();
+    void OnDarkMode();
+    void OnRetroMode();
+    void OnHelp();
+    void OnVSMode();
 
     bool setFocus;
     TextEditor textEdit;
     /// @end impl
 
-    void SaveFile(const std::string& fname);
+    void DoSaveFile(const std::string& fname);
 };
 
 extern MainActivity mainActivity;

@@ -70,9 +70,9 @@ void OpenFileActivity::Draw()
         // TODO: Add Draw calls of dependent popup windows here
 
         /// @begin Child
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 5*dp, 5*dp });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 5*dp, 7*dp });
         ImGui::PushStyleColor(ImGuiCol_ChildBg, 0xff323432);
-        ImGui::BeginChild("child1", { -1, 40*dp }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoSavedSettings);
+        ImGui::BeginChild("child1", { -1, 40*dp }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings);
         {
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 5*dp, -1*dp });
             /// @separator
@@ -87,26 +87,14 @@ void OpenFileActivity::Draw()
             ImGui::PopStyleColor();
             /// @end Button
 
-            /// @begin Table
+            /// @begin Selectable
             ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-            if (ImGui::BeginTable("table2", 2, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX, { -1, 0 }))
-            {
-                ImGui::TableSetupColumn("left-content", ImGuiTableColumnFlags_WidthStretch, 0);
-                ImGui::TableSetupColumn("right-content", ImGuiTableColumnFlags_WidthFixed, 0*dp);
-                ImGui::TableNextRow(0, 0);
-                ImGui::TableSetColumnIndex(0);
-                /// @separator
-
-                /// @begin Text
-                ImGui::AlignTextToFramePadding();
-                ImGui::TextUnformatted("Open File");
-                /// @end Text
-
-
-                /// @separator
-                ImGui::EndTable();
-            }
-            /// @end Table
+            ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0, 0 });
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImRad::Selectable("Open File", false, ImGuiSelectableFlags_DontClosePopups, { 0, -1 });
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+            /// @end Selectable
 
             /// @separator
             ImGui::PopStyleVar();
@@ -117,9 +105,9 @@ void OpenFileActivity::Draw()
         /// @end Child
 
         /// @begin Table
-        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5*dp, 5*dp });
+        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5*dp, 0 });
         ImRad::PushInvisibleScrollbar();
-        if (ImGui::BeginTable("table3", 3, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_BordersOuterV, { -1, -1 }))
+        if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_BordersOuterV, { -1, -1 }))
         {
             ImRad::ScrollWhenDragging(true);
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0);
@@ -135,7 +123,7 @@ void OpenFileActivity::Draw()
 
                 /// @begin Selectable
                 ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0, 0.5f });
-                if (ImRad::Selectable(ImRad::Format("{}", files[r].name).c_str(), false, ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_SpanAllColumns, { 0, 30*dp }))
+                if (ImRad::Selectable(ImRad::Format("{}", files[r].name).c_str(), false, ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_SpanAllColumns, { 0, 35*dp }))
                     OnSelect();
                 ImGui::PopStyleVar();
                 /// @end Selectable
@@ -144,7 +132,7 @@ void OpenFileActivity::Draw()
                 ImRad::TableNextColumn(1);
                 ImGui::BeginDisabled(true);
                 ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0, 0.5f });
-                ImRad::Selectable(ImRad::Format("{}", files[r].size).c_str(), false, ImGuiSelectableFlags_DontClosePopups, { 0, 30*dp });
+                ImRad::Selectable(ImRad::Format("{}", files[r].size).c_str(), false, ImGuiSelectableFlags_DontClosePopups, { 0, 35*dp });
                 ImGui::PopStyleVar();
                 ImGui::EndDisabled();
                 /// @end Selectable
@@ -153,7 +141,7 @@ void OpenFileActivity::Draw()
                 ImRad::TableNextColumn(1);
                 ImGui::BeginDisabled(true);
                 ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0, 0.5f });
-                ImRad::Selectable(ImRad::Format("{}", files[r].modified).c_str(), false, ImGuiSelectableFlags_DontClosePopups, { 0, 30*dp });
+                ImRad::Selectable(ImRad::Format("{}", files[r].modified).c_str(), false, ImGuiSelectableFlags_DontClosePopups, { 0, 35*dp });
                 ImGui::PopStyleVar();
                 ImGui::EndDisabled();
                 /// @end Selectable

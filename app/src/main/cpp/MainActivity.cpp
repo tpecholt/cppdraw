@@ -5,6 +5,7 @@
 #include "InputQuery.h"
 #include "MessageBox.h"
 #include "OpenFileActivity.h"
+#include "Guide.h"
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -44,7 +45,7 @@ void MainActivity::Init()
 
 void MainActivity::Draw()
 {
-    /// @style Dark
+    /// @style material
     /// @unit dp
     /// @begin TopWindow
     auto* ioUserData = (ImRad::IOUserData*)ImGui::GetIO().UserData;
@@ -64,6 +65,7 @@ void MainActivity::Draw()
         // TODO: Add Draw calls of dependent popup windows here
         inputQuery.Draw();
         messageBox.Draw();
+        guide.Draw();
 
         /// @begin MenuIt
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 10*dp, 10*dp });
@@ -107,11 +109,18 @@ void MainActivity::Draw()
             /// @separator
 
             /// @begin MenuIt
-            ImGui::MenuItem("Dark Mode", "", &darkMode);
+            if (ImGui::MenuItem("VS Mode", "", &vsMode))
+                OnVSMode();
             /// @end MenuIt
 
             /// @begin MenuIt
-            ImGui::MenuItem("Retro Mode", "", &retroMode);
+            if (ImGui::MenuItem("Dark Mode", "", &darkMode))
+                OnDarkMode();
+            /// @end MenuIt
+
+            /// @begin MenuIt
+            if (ImGui::MenuItem("Retro Mode", "", &retroMode))
+                OnRetroMode();
             /// @end MenuIt
 
             /// @begin MenuIt
@@ -155,7 +164,17 @@ void MainActivity::Draw()
                 /// @begin Button
                 ImRad::TableNextColumn(1);
                 ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-                if (ImGui::Button("\xee\x8b\x88", { 40*dp, -1 }))
+                if (ImGui::Button("\xee\x83\xb0", { 30*dp, -1 }))
+                {
+                    OnHelp();
+                }
+                ImGui::PopStyleColor();
+                /// @end Button
+
+                /// @begin Button
+                ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+                ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+                if (ImGui::Button("\xee\x8b\x88", { 30*dp, -1 }))
                 {
                     ImRad::OpenWindowPopup("FileMenu");
                 }
@@ -165,7 +184,7 @@ void MainActivity::Draw()
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
                 ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-                if (ImGui::Button("\xee\x97\x94", { 40*dp, -1 }))
+                if (ImGui::Button("\xee\x97\x94", { 30*dp, -1 }))
                 {
                     ImRad::OpenWindowPopup("EditMenu");
                 }
@@ -307,10 +326,14 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
         ImGui::SetNextWindowFocus();
     }
 
+    textEdit.SetImGuiChildIgnored(true);
+    textEdit.SetPalette(vsMode ? TextEditor::GetLightPalette() :
+                        darkMode ? TextEditor::GetDarkPalette() :
+                        TextEditor::GetRetroBluePalette());
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, textEdit.GetPalette()[(int)TextEditor::PaletteIndex::Background]);
     ImGui::BeginChild("textEdit", args.size);
 
-    textEdit.SetImGuiChildIgnored(true);
-    textEdit.SetPalette(darkMode ? TextEditor::GetDarkPalette() : TextEditor::GetRetroBluePalette());
     textEdit.Render("textEdit", args.size);
 
     if (ImGui::IsWindowFocused())
@@ -327,6 +350,7 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
     ImGui::PopStyleVar();
 
     ImGui::EndChild();
+    ImGui::PopStyleColor();
 }
 
 void MainActivity::OnButton()
@@ -365,9 +389,9 @@ void MainActivity::OnRun()
 void MainActivity::OnFileNew()
 {
     const char* SRC_TEMPLATE =
-            "#include \"cppdraw.h\"\n\nvoid Draw(float time)\n{\n\t//Add your code here\n}\n";
+            "#include \"cppdraw.h\"\n\nvoid draw(float time)\n{\n\t//Add your code here\n}\n";
     if (fileName != "")
-        SaveFile(fileName);
+        DoSaveFile(fileName);
     textEdit.SetText(SRC_TEMPLATE);
     OnFileSaveAs();
 }
@@ -385,11 +409,11 @@ void MainActivity::OnFileSaveAs()
             messageBox.message = "'" + fn + "' already exists. Overwrite?";
             messageBox.OpenPopup([this,fn](ImRad::ModalResult mr) {
                 if (mr == ImRad::Yes)
-                    SaveFile(fn);
+                    DoSaveFile(fn);
             });
         }
         else {
-            SaveFile(fn);
+            DoSaveFile(fn);
         }
     });
 }
@@ -397,7 +421,7 @@ void MainActivity::OnFileSaveAs()
 void MainActivity::OnFileOpen()
 {
     if (fileName != "")
-        SaveFile(fileName);
+        DoSaveFile(fileName);
     openFileActivity.Open();
 }
 
@@ -420,9 +444,32 @@ void MainActivity::OnFileDelete()
     });
 }
 
-void MainActivity::SaveFile(const std::string& fname)
+void MainActivity::OnVSMode()
 {
-    std::string path = fname; //homeDir + "/" + fname;
+    vsMode = true;
+    retroMode = darkMode = false;
+}
+
+void MainActivity::OnDarkMode()
+{
+    darkMode = true;
+    retroMode = vsMode = false;
+}
+
+void MainActivity::OnRetroMode()
+{
+    retroMode = true;
+    vsMode = darkMode = false;
+}
+
+void MainActivity::OnHelp()
+{
+    guide.OpenPopup();
+}
+
+void MainActivity::DoSaveFile(const std::string& fname)
+{
+    std::string path = fname;
     if (fname.find(".") == std::string::npos)
         path += ".cpp";
     std::ofstream fout(path);
@@ -435,3 +482,4 @@ void MainActivity::SaveFile(const std::string& fname)
     fout << textEdit.GetText();
     fileName = fname;
 }
+

@@ -38,7 +38,7 @@ static void Shutdown();
 static void FreeMem();
 static void MainLoopStep();
 static int ShowSoftKeyboardInput(int mode);
-static int GetAssetData(const char* filename, void** out_data);
+/*static*/ int GetAssetData(const char* filename, void** out_data);
 static void GetDisplayInfo();
 static void UpdateScreenRect();
 
@@ -248,15 +248,16 @@ void Init(struct android_app* app)
         /*cfg.SizePixels = g_IOUserData.dpiScale * 16.0f;
         io.Fonts->AddFontDefault(&cfg);*/
 
-        void *roboto_data, *material_data;
-        int roboto_size, material_size;
+        void *roboto_data, *robotoM_data, *material_data;
+        int roboto_size, robotoM_size, material_size;
         ImFont *font;
         roboto_size = GetAssetData("Roboto-Regular.ttf", &roboto_data);
         material_size = GetAssetData(FONT_ICON_FILE_NAME_MD, &material_data);
+        robotoM_size = GetAssetData("Roboto-Medium.ttf", &robotoM_data);
         static ImWchar icons_ranges[] = {ICON_MIN_MD, ICON_MAX_16_MD, 0};
 
         font = io.Fonts->AddFontFromMemoryTTF(roboto_data, roboto_size,
-                                              g_IOUserData.dpiScale * 20.0f);
+                                              g_IOUserData.dpiScale * 18.0f);
         IM_ASSERT(font != nullptr);
         cfg.MergeMode = true;
         cfg.GlyphOffset.y = 20.f * g_IOUserData.dpiScale / 5;
@@ -264,6 +265,18 @@ void Init(struct android_app* app)
                                               g_IOUserData.dpiScale * 20.0f, &cfg, icons_ranges);
         IM_ASSERT(font != nullptr);
 
+        //Guide fonts
+        cfg = {};
+        strcpy(cfg.Name, "H1");
+        font = io.Fonts->AddFontFromMemoryTTF(robotoM_data, robotoM_size,
+                                              g_IOUserData.dpiScale * 24.0f, &cfg);
+        strcpy(cfg.Name, "H2");
+        font = io.Fonts->AddFontFromMemoryTTF(robotoM_data, robotoM_size,
+                                              g_IOUserData.dpiScale * 22.0f, &cfg);
+        strcpy(cfg.Name, "H3");
+        font = io.Fonts->AddFontFromMemoryTTF(robotoM_data, robotoM_size,
+                                              g_IOUserData.dpiScale * 20.0f, &cfg);
+        //start activity
         openFileActivity.Open();
     }
 }
@@ -345,7 +358,7 @@ void MainLoopStep()
 // Helper functions
 
 // Helper to retrieve data placed into the assets/ directory (android/app/src/main/assets)
-static int GetAssetData(const char* filename, void** outData)
+/*static*/ int GetAssetData(const char* filename, void** outData)
 {
     int num_bytes = 0;
     AAsset* asset_descriptor = AAssetManager_open(g_App->activity->assetManager, filename, AASSET_MODE_BUFFER);

@@ -27,11 +27,16 @@ project("cppdraw")
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
         main.cpp
+        Guide.cpp
         InputQuery.cpp
         MainActivity.cpp
         MessageBox.cpp
         OpenFileActivity.cpp
-        TextEditor.cpp
+        #
+        imgui_markdown/imgui_markdown.h
+        #imgui_md/imgui_md.cpp
+        #
+        ImGuiColorTextEdit/TextEditor.cpp
         # 
         imgui/imgui.cpp
         imgui/imgui_demo.cpp
