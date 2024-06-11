@@ -34,7 +34,7 @@ private:
     void OnDarkMode();
     void OnRetroMode();
     void OnHelp();
-    void OnVSMode();
+    void OnLightMode();
 
     bool setFocus;
     TextEditor textEdit;

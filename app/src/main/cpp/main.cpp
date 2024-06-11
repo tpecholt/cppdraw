@@ -14,6 +14,7 @@
 
 #include "MainActivity.h"
 #include "OpenFileActivity.h"
+#include "ProgramActivity.h"
 
 namespace fs = std::filesystem;
 
@@ -48,6 +49,7 @@ void Draw()
 {
 	mainActivity.Draw();
     openFileActivity.Draw();
+    programActivity.Draw();
 }
 
 //-----------------------------------------------------------------

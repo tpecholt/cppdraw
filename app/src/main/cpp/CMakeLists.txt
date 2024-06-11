@@ -11,6 +11,8 @@ cmake_minimum_required(VERSION 3.22.1)
 # build script scope).
 project("cppdraw")
 
+message("CMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}")
+
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
@@ -32,6 +34,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         MainActivity.cpp
         MessageBox.cpp
         OpenFileActivity.cpp
+        ProgramActivity.cpp
         #
         imgui_markdown/imgui_markdown.h
         #imgui_md/imgui_md.cpp

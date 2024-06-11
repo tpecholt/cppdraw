@@ -5,6 +5,7 @@
 #include "InputQuery.h"
 #include "MessageBox.h"
 #include "OpenFileActivity.h"
+#include "ProgramActivity.h"
 #include "Guide.h"
 #include <filesystem>
 
@@ -125,7 +126,7 @@ void MainActivity::Draw()
 
             /// @begin MenuIt
             if (ImGui::MenuItem("Light Mode", "", &lightMode))
-                OnVSMode();
+                OnLightMode();
             /// @end MenuIt
 
             /// @begin MenuIt
@@ -352,9 +353,6 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
 
     textEdit.Render("textEdit", args.size);
 
-    if (ImGui::IsWindowFocused())
-        ((ImRad::IOUserData*)ImGui::GetIO().UserData)->imeType = ImRad::ImeText;
-
     //put overlay button in the same window to make it work
     float dp = ((ImRad::IOUserData*)ImGui::GetIO().UserData)->dpiScale;
     ImGui::SetCursorScreenPos({ ImGui::GetCurrentWindow()->InnerRect.Max.x-55*dp, ImGui::GetCurrentWindow()->InnerRect.Max.y-51*dp }); //overlayPos
@@ -364,6 +362,8 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
         OnRun();
     }
     ImGui::PopStyleVar();
+    if (ImGui::IsWindowFocused() && !ImGui::IsItemFocused())
+        ((ImRad::IOUserData*)ImGui::GetIO().UserData)->imeType = ImRad::ImeText;
 
     ImGui::EndChild();
     ImGui::PopStyleColor();
@@ -399,7 +399,7 @@ void MainActivity::OnButtonFocused()
 
 void MainActivity::OnRun()
 {
-    //fileName = fileName + "R";
+    programActivity.Open();
 }
 
 void MainActivity::OnFileNew()
@@ -460,7 +460,7 @@ void MainActivity::OnFileDelete()
     });
 }
 
-void MainActivity::OnVSMode()
+void MainActivity::OnLightMode()
 {
     lightMode = true;
     retroMode = darkMode = false;
