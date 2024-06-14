@@ -45,6 +45,8 @@ void Guide::Draw()
     const float dp = ioUserData->dpiScale;
     ID = ImGui::GetID("###Guide");
     ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xff323432);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 7*dp });
     ImGui::SetNextWindowPos({ ioUserData->WorkRect().Max.x - animPos.x, ioUserData->WorkRect().Max.y - animPos.y }, 0, { 1, 1 });  //Bottom
     ImGui::SetNextWindowSize({ ioUserData->WorkRect().GetWidth(), 500*dp }); //{ 420*dp, 500*dp }
     bool tmpOpen = true;
@@ -64,6 +66,30 @@ void Guide::Draw()
 
         // TODO: Add Draw calls of dependent popup windows here
 
+        /// @begin Table
+        if (ImGui::BeginTable("table1", 3, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX, { -1, 0 }))
+        {
+            ImGui::TableSetupColumn("left-stretch", ImGuiTableColumnFlags_WidthStretch, 0);
+            ImGui::TableSetupColumn("content", ImGuiTableColumnFlags_WidthFixed, 60*dp);
+            ImGui::TableSetupColumn("right-stretch", ImGuiTableColumnFlags_WidthStretch, 0);
+            ImGui::TableNextRow(0, 0);
+            ImGui::TableSetColumnIndex(0);
+            /// @separator
+
+            /// @begin Separator
+            ImRad::TableNextColumn(1);
+            ImRad::Spacing(1);
+            ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3*dp);
+            /// @end Separator
+
+
+            /// @separator
+            ImGui::EndTable();
+        }
+        /// @end Table
+
+        // TODO: Add Draw calls of dependent popup windows here
+
         /// @begin CustomWidget
         OnGuide({ -1, -1 });
         /// @end CustomWidget
@@ -71,6 +97,8 @@ void Guide::Draw()
         /// @separator
         ImGui::EndPopup();
     }
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     /// @end TopWindow
 }
@@ -85,6 +113,7 @@ void Guide::OnGuide(const ImRad::CustomWidgetArgs& args)
     cfg.headingFormats[2] = { ImRad::GetFontByName("H3"), false };
 
     ImRad::PushInvisibleScrollbar();
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
     ImGui::BeginChild("md", args.size);
     if (ImGui::IsWindowAppearing())
         ImGui::SetScrollY(0);
@@ -93,5 +122,6 @@ void Guide::OnGuide(const ImRad::CustomWidgetArgs& args)
     ImGui::Markdown(content.c_str(), content.size(), cfg);
 
     ImGui::EndChild();
+    ImGui::PopStyleVar();
     ImRad::PopInvisibleScrollbar();
 }

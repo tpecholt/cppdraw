@@ -50,7 +50,7 @@ void OpenFileActivity::Init()
 
 void OpenFileActivity::Draw()
 {
-    /// @style Dark
+    /// @style material
     /// @unit dp
     /// @begin TopWindow
     auto* ioUserData = (ImRad::IOUserData*)ImGui::GetIO().UserData;
@@ -89,7 +89,7 @@ void OpenFileActivity::Draw()
 
             /// @begin Selectable
             ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-            ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0, 0 });
+            ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0, 0.5f });
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             ImRad::Selectable("Open File", false, ImGuiSelectableFlags_DontClosePopups, { 0, -1 });
             ImGui::PopItemFlag();
@@ -107,7 +107,7 @@ void OpenFileActivity::Draw()
         /// @begin Table
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5*dp, 0 });
         ImRad::PushInvisibleScrollbar();
-        if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_BordersOuterV, { -1, -1 }))
+        if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_BordersInnerH, { -1, -1 }))
         {
             ImRad::ScrollWhenDragging(true);
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0);
@@ -123,7 +123,7 @@ void OpenFileActivity::Draw()
 
                 /// @begin Selectable
                 ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0, 0.5f });
-                if (ImRad::Selectable(ImRad::Format("{}", files[r].name).c_str(), false, ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_SpanAllColumns, { 0, 35*dp }))
+                if (ImRad::Selectable(ImRad::Format(" \xee\x89\x8d {}", files[r].name).c_str(), false, ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_SpanAllColumns, { 0, 35*dp }))
                     OnSelect();
                 ImGui::PopStyleVar();
                 /// @end Selectable

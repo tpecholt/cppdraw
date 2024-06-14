@@ -63,6 +63,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 
 target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/../assets/usr/include
         ${CMAKE_ANDROID_NDK}/sources/android/native_app_glue
         ${CMAKE_CURRENT_SOURCE_DIR}/imgui
         C:/work/imrad/src

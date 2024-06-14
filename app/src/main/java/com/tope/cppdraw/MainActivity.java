@@ -22,6 +22,11 @@ import android.widget.TextView;
 import android.graphics.Rect;
 import android.content.ClipboardManager;
 import android.content.ClipData;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipEntry;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.File;
 
 public class MainActivity extends NativeActivity
 implements TextWatcher, TextView.OnEditorActionListener
@@ -214,5 +219,51 @@ implements TextWatcher, TextView.OnEditorActionListener
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("code", text);
         clipboard.setPrimaryClip(clip);
+    }
+
+    public int unzip(String fname, String dstDir) {
+        try {
+            //unzip STL headers
+            File destDir = new File(dstDir);
+            byte[] buffer = new byte[1024];
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(fname));
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                File destFile = new File(destDir, zipEntry.getName());
+                String destDirPath = destDir.getCanonicalPath();
+                String destFilePath = destFile.getCanonicalPath();
+
+                if (!destFilePath.startsWith(destDirPath + File.separator)) {
+                    throw new java.io.IOException("Entry is outside of the target dir: " + zipEntry.getName());
+                }
+
+                if (zipEntry.isDirectory()) {
+                    if (!destFile.isDirectory() && !destFile.mkdirs()) {
+                        throw new java.io.IOException("Failed to create directory " + destFile);
+                    }
+                } else {
+                    // fix for Windows-created archives
+                    File parent = destFile.getParentFile();
+                    if (!parent.isDirectory() && !parent.mkdirs()) {
+                        throw new java.io.IOException("Failed to create directory " + parent);
+                    }
+
+                    // write file content
+                    FileOutputStream fos = new FileOutputStream(destFile);
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
+                    }
+                    fos.close();
+                }
+                zipEntry = zis.getNextEntry();
+            }
+
+            zis.closeEntry();
+            zis.close();
+            return 0;
+        } catch (java.lang.Exception e) {
+            return 1;
+        }
     }
 }

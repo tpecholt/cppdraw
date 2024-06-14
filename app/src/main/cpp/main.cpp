@@ -42,6 +42,7 @@ static int ShowSoftKeyboardInput(int mode);
 /*static*/ int GetAssetData(const char* filename, void** out_data);
 static void GetDisplayInfo();
 static void UpdateScreenRect();
+static void InstallClang();
 
 //-----------------------------------------------------------------
 
@@ -165,8 +166,7 @@ void Init(struct android_app* app)
 
     // Initialize EGL
     // This is mostly boilerplate code for EGL...
-    if (g_EglDisplay == EGL_NO_DISPLAY)
-    {
+    if (g_EglDisplay == EGL_NO_DISPLAY) {
         g_EglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
         if (g_EglDisplay == EGL_NO_DISPLAY)
             __android_log_print(ANDROID_LOG_ERROR, g_LogTag, "%s",
@@ -193,8 +193,7 @@ void Init(struct android_app* app)
         eglGetConfigAttrib(g_EglDisplay, g_EglConfig, EGL_NATIVE_VISUAL_ID, &egl_format);
         ANativeWindow_setBuffersGeometry(g_App->window, 0, 0, egl_format);
     }
-    if (g_EglContext == EGL_NO_CONTEXT)
-    {
+    if (g_EglContext == EGL_NO_CONTEXT) {
         const EGLint egl_context_attributes[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
         g_EglContext = eglCreateContext(g_EglDisplay, g_EglConfig, EGL_NO_CONTEXT,
                                         egl_context_attributes);
@@ -203,14 +202,12 @@ void Init(struct android_app* app)
             __android_log_print(ANDROID_LOG_ERROR, g_LogTag, "%s",
                                 "eglCreateContext() returned EGL_NO_CONTEXT");
     }
-    if (g_EglSurface == EGL_NO_SURFACE)
-    {
+    if (g_EglSurface == EGL_NO_SURFACE) {
         g_EglSurface = eglCreateWindowSurface(g_EglDisplay, g_EglConfig, g_App->window, nullptr);
         eglMakeCurrent(g_EglDisplay, g_EglSurface, g_EglSurface, g_EglContext);
     }
 
-    if (!g_Initialized)
-    {
+    if (!g_Initialized) {
         g_Initialized = true;
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -225,6 +222,7 @@ void Init(struct android_app* app)
         //mainActivity.homeDir = app->activity->internalDataPath;
         std::error_code ec;
         fs::current_path(app->activity->internalDataPath, ec);
+        InstallClang();
 
         // Setup Platform/Renderer backends
         ImGui_ImplAndroid_Init(g_App->window);
@@ -278,6 +276,7 @@ void Init(struct android_app* app)
         strcpy(cfg.Name, "H3");
         font = io.Fonts->AddFontFromMemoryTTF(robotoM_data, robotoM_size,
                                               g_IOUserData.dpiScale * 20.0f, &cfg);
+
         //start activity
         openFileActivity.Open();
     }
@@ -439,4 +438,31 @@ static void GetDisplayInfo()
 
     g_RotAngle = bl->CallIntMethod(g_App->activity->clazz, method_id);
     UpdateScreenRect();
+}
+
+void InstallClang()
+{
+    void* data;
+    int size = GetAssetData("usr.zip", &data);
+    std::ofstream fout("usr.zip", std::ios::binary);
+    fout.write((char *) data, size);
+
+    //unzip sysroot
+    JniBlock bl;
+    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "unzip", "(Ljava/lang/String;Ljava/lang/String;)I");
+    if (method_id == nullptr)
+        return;
+    jstring jfrom = bl->NewStringUTF((fs::current_path() / "usr.zip").c_str());
+    jstring jto = bl->NewStringUTF((fs::current_path()).c_str());
+    bl->CallIntMethod(g_App->activity->clazz, method_id, jfrom, jto);
+
+    //chmod, ln
+    system("chmod 777 usr/bin/clang-18");
+    system("chmod 777 usr/bin/lld");
+    system("ln -s lld usr/bin/ld.lld");
+
+    //cppdraw.h
+    size = GetAssetData("usr/include/cppdraw.h", &data);
+    std::ofstream fout2("usr/include/cppdraw.h", std::ios::binary);
+    fout2.write((char *) data, size);
 }

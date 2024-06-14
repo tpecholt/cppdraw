@@ -180,7 +180,7 @@ void MainActivity::Draw()
                 /// @begin Button
                 ImRad::TableNextColumn(1);
                 ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-                if (ImGui::Button("\xee\x83\xb0", { 30*dp, -1 }))
+                if (ImGui::Button("\xee\x83\xb0", { 35*dp, -1 }))
                 {
                     OnHelp();
                 }
@@ -190,7 +190,7 @@ void MainActivity::Draw()
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
                 ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-                if (ImGui::Button("\xee\x8b\x88", { 30*dp, -1 }))
+                if (ImGui::Button("\xee\x8b\x88", { 35*dp, -1 }))
                 {
                     ImRad::OpenWindowPopup("FileMenu");
                 }
@@ -405,7 +405,7 @@ void MainActivity::OnRun()
 void MainActivity::OnFileNew()
 {
     const char* SRC_TEMPLATE =
-            "#include \"cppdraw.h\"\n\nvoid draw(float time)\n{\n\n}\n";
+            "#include \"cppdraw.h\"\n\nvoid draw(float dt)\n{\n\n}\n";
     if (fileName != "")
         DoSaveFile(fileName);
     textEdit.SetText(SRC_TEMPLATE);

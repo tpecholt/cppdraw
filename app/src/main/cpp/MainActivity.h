@@ -38,7 +38,9 @@ private:
 
     bool setFocus;
     TextEditor textEdit;
-    TextEditor::Palette lightPalette, darkPalette, retroPalette;
+    TextEditor::Palette lightPalette;
+    TextEditor::Palette darkPalette;
+    TextEditor::Palette retroPalette;
     /// @end impl
 
     void DoSaveFile(const std::string& fname);

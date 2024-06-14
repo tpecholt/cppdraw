@@ -14,7 +14,9 @@ public:
 
     struct FileInfo {
         time_t time;
-        std::string name , size , modified;
+        std::string name;
+        std::string size;
+        std::string modified;
     };
     std::vector<FileInfo> files;
     int r = 0;
