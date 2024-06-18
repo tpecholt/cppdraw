@@ -7,11 +7,14 @@
 #include "OpenFileActivity.h"
 #include "ProgramActivity.h"
 #include "Guide.h"
+#include "BuildOutput.h"
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
 MainActivity mainActivity;
+
+extern void ShellExecute(const std::string& cmd, std::function<void(std::string_view)> clb = {});
 
 
 void MainActivity::Open()
@@ -63,6 +66,11 @@ void MainActivity::Draw()
 {
     /// @style material
     /// @unit dp
+    if (startProgram) {
+        startProgram = false;
+        programActivity.Open();
+    }
+    
     /// @begin TopWindow
     auto* ioUserData = (ImRad::IOUserData*)ImGui::GetIO().UserData;
     const float dp = ioUserData->dpiScale;
@@ -179,6 +187,7 @@ void MainActivity::Draw()
 
                 /// @begin Button
                 ImRad::TableNextColumn(1);
+                ImRad::Spacing(1);
                 ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
                 if (ImGui::Button("\xee\x83\xb0", { 35*dp, -1 }))
                 {
@@ -221,12 +230,14 @@ void MainActivity::Draw()
         ImGui::PopStyleVar();
         /// @end Child
 
+        bool showButtons = !ImGui::GetTopMostAndVisiblePopupModal() && ioUserData->kbdShown;
+
         /// @begin CustomWidget
-        OnEditor({ -1, -40*dp });
+        OnEditor({ -1, showButtons?-40*dp:-1 });
         /// @end CustomWidget
 
         /// @begin Child
-        if (!ImGui::GetTopMostAndVisiblePopupModal()&&ioUserData->kbdShown)
+        if (showButtons)
         {
             //visible
             ImGui::PushStyleColor(ImGuiCol_ChildBg, 0xff663300);
@@ -328,6 +339,9 @@ void MainActivity::Draw()
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
     /// @end TopWindow
+    
+    int ku = 2;
+    int j = 5;
 }
 
 void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
@@ -336,8 +350,8 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
         return;
 
     //need to keep it focused even when button is down (not pressed yet)
-    if (setFocus) {
-        setFocus = false;
+    if (setEditorFocus) {
+        setEditorFocus = false;
         ImGui::SetNextWindowFocus();
     }
 
@@ -373,7 +387,7 @@ void MainActivity::OnButton()
 {
     ImGuiID id = ImGui::GetItemID();
     ImGuiWindow* win = ImGui::GetCurrentWindow();
-    setFocus = true;
+    setEditorFocus = true;
     if (id == win->GetID("{"))
         textEdit.InsertText("{");
     else if (id == win->GetID("}"))
@@ -394,27 +408,62 @@ void MainActivity::OnButton()
 
 void MainActivity::OnButtonFocused()
 {
-    setFocus = true;
+    setEditorFocus = true;
 }
 
 void MainActivity::OnRun()
 {
-    programActivity.Open();
+    DoSaveFile(fileName);
+    buildOutput.output = { { BuildOutput::OutputRow::note, 0, 0, "Build has started..." } };
+    buildOutput.OpenPopup();
+    std::string cmd = "usr/bin/clang-18"
+                      " --sysroot=" + fs::current_path().string() +
+                      " -lc++ -Wall -o usr/tmp/prog.out" +
+                      " usr/include/cppdraw.cpp " + fileName;
+    ShellExecute(cmd, [this](std::string_view output) {
+        int err = buildOutput.ParseOutput(output, fileName);
+        if (!err) {
+            //compiled OK
+            system("chmod 777 usr/tmp/prog.out");
+            buildOutput.ClosePopup();
+            startProgram = true; //start from cpp thread not here
+        }
+    });
 }
 
 void MainActivity::OnFileNew()
 {
     const char* SRC_TEMPLATE =
             "#include \"cppdraw.h\"\n\nvoid draw(float dt)\n{\n\n}\n";
+
     if (fileName != "")
         DoSaveFile(fileName);
-    textEdit.SetText(SRC_TEMPLATE);
-    OnFileSaveAs();
+    inputQuery.label = "New file name:";
+    inputQuery.value = "";
+    inputQuery.OpenPopup([this,SRC_TEMPLATE](ImRad::ModalResult) {
+        std::string fn = inputQuery.value;
+        if (fn.find(".") == std::string::npos)
+            fn += ".cpp";
+        if (fs::exists(/*homeDir + "/" +*/ fn)) {
+            messageBox.buttons = ImRad::Yes | ImRad::No;
+            messageBox.message = "'" + fn + "' already exists. Overwrite?";
+            messageBox.OpenPopup([this,fn,SRC_TEMPLATE](ImRad::ModalResult mr) {
+                if (mr == ImRad::Yes) {
+                    textEdit.SetText(SRC_TEMPLATE);
+                    DoSaveFile(fn);
+                }
+            });
+        }
+        else {
+            textEdit.SetText(SRC_TEMPLATE);
+            DoSaveFile(fn);
+        }
+    });
 }
 
 void MainActivity::OnFileSaveAs()
 {
-    inputQuery.label = "Enter file name:";
+    inputQuery.label = "New file name:";
     inputQuery.value = "";
     inputQuery.OpenPopup([this](ImRad::ModalResult) {
         std::string fn = inputQuery.value;
@@ -499,3 +548,8 @@ void MainActivity::DoSaveFile(const std::string& fname)
     fileName = fname;
 }
 
+void MainActivity::GoTo(int line, int column)
+{
+    if (line >= 1)
+        textEdit.SetCursorPosition({ line - 1, column - 1 });
+}

@@ -19,6 +19,8 @@ public:
     bool lightMode = true;
     /// @end interface
 
+    void GoTo(int, int);
+
 private:
     /// @begin impl
     void Init();
@@ -36,12 +38,14 @@ private:
     void OnHelp();
     void OnLightMode();
 
-    bool setFocus;
+    bool setEditorFocus;
     TextEditor textEdit;
     TextEditor::Palette lightPalette;
     TextEditor::Palette darkPalette;
     TextEditor::Palette retroPalette;
     /// @end impl
+
+    bool startProgram = false;
 
     void DoSaveFile(const std::string& fname);
 };

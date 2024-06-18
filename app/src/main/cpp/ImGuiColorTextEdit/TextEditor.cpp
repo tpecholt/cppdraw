@@ -964,7 +964,7 @@ void TextEditor::Render()
 			if (mState.mCursorPosition.mLine == lineNo)
 			{
 				auto focused = ImGui::IsWindowFocused();
-				float dpiScale = ImGui::GetFontSize() / 10.f;
+				float dpiScale = ImGui::GetFontSize() / 10.f; //TOPE
 
 				// Highlight the current line (where the cursor is)
 				if (!HasSelection())
@@ -1114,7 +1114,7 @@ void TextEditor::Render()
 	if (mScrollToCursor)
 	{
 		EnsureCursorVisible();
-		ImGui::SetWindowFocus();
+		//TOPE don't ImGui::SetWindowFocus();
 		mScrollToCursor = false;
 	}
 }

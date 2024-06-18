@@ -22,22 +22,31 @@ import android.widget.TextView;
 import android.graphics.Rect;
 import android.content.ClipboardManager;
 import android.content.ClipData;
+
+import java.lang.reflect.Field;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class MainActivity extends NativeActivity
 implements TextWatcher, TextView.OnEditorActionListener
 {
     protected View mView;
     private EditText mEditText;
+    private Object mutex = new Object();
+    private Process daemon = null;
 
     private native void OnKeyboardShown(int h);
     private native void OnScreenRotation(int deg);
     private native void OnInputCharacter(int ch);
     private native void OnSpecialKey(int code);
+    private native void OnProgramOutput(String str);
+    private native void OnDeamonStart(int pid);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -265,5 +274,89 @@ implements TextWatcher, TextView.OnEditorActionListener
         } catch (java.lang.Exception e) {
             return 1;
         }
+    }
+
+    public void shellExecute(String cmd) {
+        Thread th = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Process process = Runtime.getRuntime().exec(cmd);
+                    int read;
+                    char[] buffer = new char[4096];
+                    StringBuffer output = new StringBuffer();
+
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(process.getInputStream()));
+                    while ((read = reader.read(buffer)) > 0) {
+                        output.append(buffer, 0, read);
+                    }
+                    reader.close();
+                    reader = new BufferedReader(
+                            new InputStreamReader(process.getErrorStream()));
+                    while ((read = reader.read(buffer)) > 0) {
+                        output.append(buffer, 0, read);
+                    }
+                    reader.close();
+
+                    process.waitFor();
+                    OnProgramOutput(output.toString());
+                } catch (IOException e) {
+                    OnProgramOutput(e.toString());
+                } catch (InterruptedException e) {
+                    OnProgramOutput(e.toString());
+                }
+            }
+        };
+        th.start();
+    }
+
+    public void stopDeamon() {
+        synchronized (mutex) {
+            if (daemon != null) {
+                daemon.destroy();
+            }
+        }
+    }
+
+    public void startDeamon(String cmd) {
+        stopDeamon();
+        Thread th = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    int pid = -1;
+                    synchronized (mutex) {
+                        daemon = Runtime.getRuntime().exec(cmd);
+                        try {
+                            Field f = daemon.getClass().getDeclaredField("pid");
+                            f.setAccessible(true);
+                            pid = f.getInt(daemon);
+                            f.setAccessible(false);
+                        } catch (Throwable e) {
+                            pid = -1;
+                        }
+                    }
+                    OnDeamonStart(pid);
+                    int read;
+                    char[] buffer = new char[4096];
+                    StringBuffer output = new StringBuffer();
+
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(daemon.getInputStream()));
+                    while ((read = reader.read(buffer)) > 0) {
+                        output.append(buffer, 0, read);
+                    }
+                    reader.close();
+
+                } catch (IOException e) {
+                    OnProgramOutput(e.toString());
+                }
+                /*catch (InterruptedException e) {
+                    OnProgramOutput(e.toString());
+                }*/
+            }
+        };
+        th.start();
     }
 }

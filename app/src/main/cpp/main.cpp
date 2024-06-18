@@ -11,10 +11,12 @@
 #include <GLES3/gl3.h>
 #include <string>
 #include <filesystem>
+#include <thread>
 
 #include "MainActivity.h"
 #include "OpenFileActivity.h"
 #include "ProgramActivity.h"
+#include "BuildOutput.h"
 
 namespace fs = std::filesystem;
 
@@ -32,6 +34,8 @@ static int                  g_KbdHeight = 0;
 static int                  g_RotAngle = 0;
 static ImRad::IOUserData    g_IOUserData;
 static int                  g_ImeType = 0;
+static std::function<void(std::string_view)> g_ShellExecuteClb;
+static std::function<void(int)> g_StartDeamonClb;
 
 // Forward declarations of helper functions
 static void Init(struct android_app* app);
@@ -43,6 +47,7 @@ static int ShowSoftKeyboardInput(int mode);
 static void GetDisplayInfo();
 static void UpdateScreenRect();
 static void InstallClang();
+/*static*/ void ShellExecute(const std::string& cmd, std::function<void(const char*)> clb = {});
 
 //-----------------------------------------------------------------
 
@@ -51,6 +56,7 @@ void Draw()
 	mainActivity.Draw();
     openFileActivity.Draw();
     programActivity.Draw();
+    buildOutput.Draw();
 }
 
 //-----------------------------------------------------------------
@@ -74,6 +80,7 @@ Java_com_tope_cppdraw_MainActivity_OnScreenRotation(JNIEnv *env, jobject thiz, j
 
 void UpdateScreenRect()
 {
+    //todo: is NavBarHeight included in KbdHeight?
     switch (g_RotAngle) {
         case 0:
             g_IOUserData.displayOffsetMin = { 0, 0 };
@@ -101,6 +108,25 @@ JNIEXPORT void JNICALL
 Java_com_tope_cppdraw_MainActivity_OnSpecialKey(JNIEnv *env, jobject thiz, jint code) {
     ImGui::GetIO().AddKeyEvent(ImGuiKey_AppForward, true);
     ImGui::GetIO().AddKeyEvent(ImGuiKey_AppForward, false);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_tope_cppdraw_MainActivity_OnProgramOutput(JNIEnv *env, jobject thiz, jstring output) {
+    jboolean isCopy;
+    const char *str = (env)->GetStringUTFChars(output, &isCopy);
+    if (g_ShellExecuteClb)
+        g_ShellExecuteClb(str);
+    g_ShellExecuteClb = {};
+    (env)->ReleaseStringUTFChars(output, str);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_tope_cppdraw_MainActivity_OnDeamonStart(JNIEnv *env, jobject thiz, jint pid) {
+    if (g_StartDeamonClb)
+        g_StartDeamonClb(pid);
+    g_StartDeamonClb = {};
 }
 
 // Main code
@@ -222,7 +248,9 @@ void Init(struct android_app* app)
         //mainActivity.homeDir = app->activity->internalDataPath;
         std::error_code ec;
         fs::current_path(app->activity->internalDataPath, ec);
-        InstallClang();
+
+        std::thread prepareStuff(InstallClang);
+        prepareStuff.detach();
 
         // Setup Platform/Renderer backends
         ImGui_ImplAndroid_Init(g_App->window);
@@ -440,29 +468,55 @@ static void GetDisplayInfo()
     UpdateScreenRect();
 }
 
+void ShellExecute(const std::string& cmd, std::function<void(std::string_view)> clb)
+
+{
+    JniBlock bl;
+    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "shellExecute", "(Ljava/lang/String;)V");
+    if (method_id == nullptr)
+        return;
+    g_ShellExecuteClb = clb;
+    jstring jcmd = bl->NewStringUTF(cmd.c_str());
+    bl->CallVoidMethod(g_App->activity->clazz, method_id, jcmd);
+    bl->DeleteLocalRef(jcmd);
+}
+
+void StartDeamon(const std::string& cmd, std::function<void(int)> clb)
+{
+    JniBlock bl;
+    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "startDeamon", "(Ljava/lang/String;)V");
+    if (method_id == nullptr)
+        return;
+    g_StartDeamonClb = clb;
+    jstring jcmd = bl->NewStringUTF(cmd.c_str());
+    bl->CallVoidMethod(g_App->activity->clazz, method_id, jcmd);
+    bl->DeleteLocalRef(jcmd);
+}
+
+//broken into several steps to avoid time limit to init
 void InstallClang()
 {
-    void* data;
-    int size = GetAssetData("usr.zip", &data);
-    std::ofstream fout("usr.zip", std::ios::binary);
-    fout.write((char *) data, size);
-
-    //unzip sysroot
+    //cppdraw.h,cpp,usr.zip
+    fs::create_directories("usr/include");
+    for (auto fn : { "usr.zip", "usr/include/cppdraw.h", "usr/include/cppdraw.cpp" }) {
+        void* data;
+        int size = GetAssetData(fn, &data);
+        std::ofstream fout2(fn, std::ios::binary);
+        fout2.write((char *) data, size);
+    }
     JniBlock bl;
-    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "unzip", "(Ljava/lang/String;Ljava/lang/String;)I");
+    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "unzip",
+                                          "(Ljava/lang/String;Ljava/lang/String;)I");
     if (method_id == nullptr)
         return;
     jstring jfrom = bl->NewStringUTF((fs::current_path() / "usr.zip").c_str());
     jstring jto = bl->NewStringUTF((fs::current_path()).c_str());
     bl->CallIntMethod(g_App->activity->clazz, method_id, jfrom, jto);
+    bl->DeleteLocalRef(jfrom);
+    bl->DeleteLocalRef(jto);
 
-    //chmod, ln
     system("chmod 777 usr/bin/clang-18");
     system("chmod 777 usr/bin/lld");
     system("ln -s lld usr/bin/ld.lld");
 
-    //cppdraw.h
-    size = GetAssetData("usr/include/cppdraw.h", &data);
-    std::ofstream fout2("usr/include/cppdraw.h", std::ios::binary);
-    fout2.write((char *) data, size);
 }

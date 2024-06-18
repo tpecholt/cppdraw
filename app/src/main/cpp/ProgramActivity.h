@@ -22,6 +22,10 @@ private:
     void OnDraw(const ImRad::CustomWidgetArgs& args);
 
     /// @end impl
+
+    void Connect();
+    int sockfd = 0;
+    std::string error;
 };
 
 extern ProgramActivity programActivity;

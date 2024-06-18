@@ -70,15 +70,14 @@ void OpenFileActivity::Draw()
         // TODO: Add Draw calls of dependent popup windows here
 
         /// @begin Child
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 5*dp, 7*dp });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 5*dp, 0 });
         ImGui::PushStyleColor(ImGuiCol_ChildBg, 0xff323432);
         ImGui::BeginChild("child1", { -1, 40*dp }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings);
         {
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 5*dp, -1*dp });
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 5*dp, 0 });
             /// @separator
 
             /// @begin Button
-            ImRad::Spacing(1);
             ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
             if (ImGui::Button("\xee\x97\x84", { 40*dp, -1 }))
             {

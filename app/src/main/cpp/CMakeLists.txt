@@ -29,6 +29,7 @@ message("CMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}")
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
         main.cpp
+        BuildOutput.cpp
         Guide.cpp
         InputQuery.cpp
         MainActivity.cpp
@@ -49,6 +50,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         imgui/imgui_tables.cpp
         imgui/imgui_widgets.cpp
         imgui/misc/cpp/imgui_stdlib.cpp
+        #
         ${CMAKE_ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
 
 # Specifies libraries CMake should link to your target library. You

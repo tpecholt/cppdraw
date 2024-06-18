@@ -4,9 +4,15 @@
 #include "ProgramActivity.h"
 #include "MainActivity.h"
 #include "cppdraw.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 ProgramActivity programActivity;
 
+extern void StartDeamon(const std::string& cmd, std::function<void(int)> clb);
 
 void ProgramActivity::Open()
 {
@@ -20,7 +26,33 @@ void ProgramActivity::Open()
 
 void ProgramActivity::Init()
 {
-    // TODO: Add your code here
+    StartDeamon("usr/tmp/prog.out", [this](int pid) {
+        Connect();
+    });
+}
+
+void ProgramActivity::Connect()
+{
+    if (!sockfd)
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+        sockfd = 0;
+        error = "can't socket";
+        return;
+    }
+    error = "connecting...";
+    sockaddr_in serv_addr = {};
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(CPPDRAW_PORT);
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    if (connect(sockfd, (sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        close(sockfd);
+        sockfd = 0;
+        error = "can't connect";
+        return;
+    }
+    error = "";
 }
 
 void ProgramActivity::Draw()
@@ -70,33 +102,50 @@ void ProgramActivity::OnQuit()
     mainActivity.Open();
 }
 
-//todo: compiled code
-void draw(float time)
-{
-    color(RGB(255, 0, 255));
-    line(0, 0, 200, 200);
-}
-
 void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
 {
-    touchDown_ = ImGui::IsMouseDown(0);
-    touchPos_ = { ImGui::GetMousePos().x, ImGui::GetMousePos().y };
-    color_ = 0xffffffff;
-    thickness_ = 3.f;
-    shapes_clear_();
+    if (error != "")
+        ImGui::TextDisabled("%s", error.c_str());
+    if (!sockfd)
+        return;
 
-    draw(0);
+    DrawCmd dcmd;
+    dcmd.time;
+    dcmd.touchDown;
+    dcmd.touchPos;
+    int n = write(sockfd, &dcmd, sizeof(DrawCmd));
+    if (n != sizeof(DrawCmd))
+        return;
 
-    auto* dl = ImGui::GetWindowDrawList();
-    const Shape* shapes;
-    size_t n = get_shapes_(&shapes);
-    for (size_t i = 0; i < n; ++i)
+    char buf[10*1024];
+    n = read(sockfd, buf, 4);
+    if (n != 4)
+        return;
+    int len = ntohl(*(uint32_t*)buf) * sizeof(Shape);
+    int off = 0;
+
+    while (len > 0)
     {
-        const auto& sh = shapes[i];
-        switch (sh.kind) {
-            case Shape::Line:
-                dl->AddLine({ sh.x1, sh.y1 }, { sh.x2, sh.y2 }, sh.fg, sh.thick);
-                break;
+        int to_read = 100;
+        if (to_read > len)
+            to_read = len;
+        n = read(sockfd, buf + off, to_read);
+        len -= n;
+        int nsh = (off + n) / sizeof(Shape);
+
+        auto *dl = ImGui::GetWindowDrawList();
+        const Shape *shapes = (const Shape *) buf;
+        for (size_t i = 0; i < nsh; ++i) {
+            const auto &sh = shapes[i];
+            switch (sh.kind) {
+                case Shape::Line:
+                    dl->AddLine({sh.x1, sh.y1}, {sh.x2, sh.y2}, sh.fg, sh.thick);
+                    break;
+            }
         }
+
+        //copy unfinished Shape to front
+        off = (off + n) % sizeof(Shape);
+        memcpy(buf, buf + nsh * sizeof(Shape), off);
     }
 }

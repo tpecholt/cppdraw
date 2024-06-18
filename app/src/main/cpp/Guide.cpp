@@ -46,7 +46,7 @@ void Guide::Draw()
     ID = ImGui::GetID("###Guide");
     ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xff323432);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 7*dp });
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 10*dp });
     ImGui::SetNextWindowPos({ ioUserData->WorkRect().Max.x - animPos.x, ioUserData->WorkRect().Max.y - animPos.y }, 0, { 1, 1 });  //Bottom
     ImGui::SetNextWindowSize({ ioUserData->WorkRect().GetWidth(), 500*dp }); //{ 420*dp, 500*dp }
     bool tmpOpen = true;
