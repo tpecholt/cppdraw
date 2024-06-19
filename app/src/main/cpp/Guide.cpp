@@ -55,6 +55,8 @@ void Guide::Draw()
         animator.Tick();
         if (!ImRad::MoveWhenDragging(ImGuiDir_Down, animPos, ioUserData->dimBgRatio))
             ClosePopup();
+        if (ImGui::IsKeyPressed(ImGuiKey_AppBack))
+            ClosePopup();
         ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
         if (modalResult != ImRad::None && animator.IsDone())
         {

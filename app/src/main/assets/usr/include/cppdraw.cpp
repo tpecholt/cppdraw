@@ -52,8 +52,8 @@ int main()
     serv_addr.sin_port = htons(CPPDRAW_PORT);
     int enable = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable))) {
-        return 2;
         fprintf(stdout, "can't setsockopt (%d)\n", errno);
+        return 2;
     }
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
         fprintf(stdout, "can't bind (%d)\n", errno);

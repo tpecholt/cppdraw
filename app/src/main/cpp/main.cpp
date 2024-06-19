@@ -78,25 +78,6 @@ Java_com_tope_cppdraw_MainActivity_OnScreenRotation(JNIEnv *env, jobject thiz, j
     UpdateScreenRect();
 }
 
-void UpdateScreenRect()
-{
-    //todo: is NavBarHeight included in KbdHeight?
-    switch (g_RotAngle) {
-        case 0:
-            g_IOUserData.displayOffsetMin = { 0, 0 };
-            g_IOUserData.displayOffsetMax = { 0, (float)g_NavBarHeight + (float)g_KbdHeight };
-            break;
-        case 90:
-            g_IOUserData.displayOffsetMin = { 0, 0 };
-            g_IOUserData.displayOffsetMax = { (float)g_NavBarHeight, (float)g_KbdHeight };
-            break;
-        case 270:
-            g_IOUserData.displayOffsetMin = { (float)g_NavBarHeight, 0 };
-            g_IOUserData.displayOffsetMax = { 0, (float)g_KbdHeight };
-            break;
-    }
-}
-
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_tope_cppdraw_MainActivity_OnInputCharacter(JNIEnv *env, jobject thiz, jint ch) {
@@ -106,8 +87,9 @@ Java_com_tope_cppdraw_MainActivity_OnInputCharacter(JNIEnv *env, jobject thiz, j
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_tope_cppdraw_MainActivity_OnSpecialKey(JNIEnv *env, jobject thiz, jint code) {
-    ImGui::GetIO().AddKeyEvent(ImGuiKey_AppForward, true);
-    ImGui::GetIO().AddKeyEvent(ImGuiKey_AppForward, false);
+    ImGuiKey key = code == 4 ? ImGuiKey_AppBack : ImGuiKey_AppForward;
+    ImGui::GetIO().AddKeyEvent(key, true);
+    ImGui::GetIO().AddKeyEvent(key, false);
 }
 
 extern "C"
@@ -355,7 +337,7 @@ void Shutdown()
 void MainLoopStep()
 {
     ImGuiIO& io = ImGui::GetIO();
-    if (g_EglDisplay == EGL_NO_DISPLAY)
+    if (g_EglDisplay == EGL_NO_DISPLAY || g_EglSurface == EGL_NO_SURFACE)
         return;
 
     // Our state
@@ -468,8 +450,26 @@ static void GetDisplayInfo()
     UpdateScreenRect();
 }
 
-void ShellExecute(const std::string& cmd, std::function<void(std::string_view)> clb)
+void UpdateScreenRect()
+{
+    //todo: is NavBarHeight included in KbdHeight?
+    switch (g_RotAngle) {
+        case 0:
+            g_IOUserData.displayOffsetMin = { 0, 0 };
+            g_IOUserData.displayOffsetMax = { 0, (float)g_NavBarHeight + (float)g_KbdHeight };
+            break;
+        case 90:
+            g_IOUserData.displayOffsetMin = { 0, 0 };
+            g_IOUserData.displayOffsetMax = { (float)g_NavBarHeight, (float)g_KbdHeight };
+            break;
+        case 270:
+            g_IOUserData.displayOffsetMin = { (float)g_NavBarHeight, 0 };
+            g_IOUserData.displayOffsetMax = { 0, (float)g_KbdHeight };
+            break;
+    }
+}
 
+void ShellExecute(const std::string& cmd, std::function<void(std::string_view)> clb)
 {
     JniBlock bl;
     jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "shellExecute", "(Ljava/lang/String;)V");
@@ -491,6 +491,15 @@ void StartDeamon(const std::string& cmd, std::function<void(int)> clb)
     jstring jcmd = bl->NewStringUTF(cmd.c_str());
     bl->CallVoidMethod(g_App->activity->clazz, method_id, jcmd);
     bl->DeleteLocalRef(jcmd);
+}
+
+void StopDeamon()
+{
+    JniBlock bl;
+    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "stopDeamon", "()V");
+    if (method_id == nullptr)
+        return;
+    bl->CallVoidMethod(g_App->activity->clazz, method_id);
 }
 
 //broken into several steps to avoid time limit to init

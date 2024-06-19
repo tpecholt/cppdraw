@@ -13,6 +13,7 @@
 ProgramActivity programActivity;
 
 extern void StartDeamon(const std::string& cmd, std::function<void(int)> clb);
+extern void StopDeamon();
 
 void ProgramActivity::Open()
 {
@@ -70,6 +71,8 @@ void ProgramActivity::Draw()
     bool tmpOpen;
     if (ImGui::Begin("###ProgramActivity", &tmpOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
     {
+        if (ImGui::IsKeyPressed(ImGuiKey_AppBack))
+            OnQuit();
         /// @separator
 
         // TODO: Add Draw calls of dependent popup windows here
@@ -77,18 +80,6 @@ void ProgramActivity::Draw()
         /// @begin CustomWidget
         OnDraw({ -1, -1 });
         /// @end CustomWidget
-
-        /// @begin Button
-        ImGui::SetCursorScreenPos({ ImGui::GetCurrentWindow()->InnerRect.Max.x-37*dp, 10*dp }); //overlayPos
-        ImGui::PushStyleColor(ImGuiCol_Text, 0xff7f817f);
-        ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-        if (ImGui::Button("\xee\x97\x8d", { 0, 0 }))
-        {
-            OnQuit();
-        }
-        ImGui::PopStyleColor();
-        ImGui::PopStyleColor();
-        /// @end Button
 
         /// @separator
         ImGui::End();
@@ -99,6 +90,10 @@ void ProgramActivity::Draw()
 
 void ProgramActivity::OnQuit()
 {
+    if (sockfd) {
+        close(sockfd);
+        sockfd = 0;
+    }
     mainActivity.Open();
 }
 

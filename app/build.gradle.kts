@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.tope.cppdraw"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 28
         versionCode = 1
         versionName = "1.0"

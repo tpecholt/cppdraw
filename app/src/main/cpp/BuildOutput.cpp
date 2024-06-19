@@ -138,8 +138,10 @@ int BuildOutput::ParseOutput(std::string_view str, std::string_view fname)
     {
         auto end = str.find(fname, beg);
         std::string_view tmp = str.substr(beg, end == std::string::npos ? end : end - beg);
-        if (!tmp.empty() && output.empty())
+        if (!tmp.empty() && output.empty()) {
             output.push_back({});
+            ++err;
+        }
         output.back().text += tmp;
         if (end == std::string::npos)
             break;

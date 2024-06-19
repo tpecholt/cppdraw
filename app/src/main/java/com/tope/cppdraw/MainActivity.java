@@ -9,6 +9,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.text.TextWatcher;
 import android.view.View;
@@ -169,12 +170,21 @@ implements TextWatcher, TextView.OnEditorActionListener
 
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-        OnSpecialKey(actionId + 256);
+        OnSpecialKey(actionId + 1024);
         return true;
     }
 
-    /* Not called with IME_TEXT, not called on hw keyboard
+    //Use this only for special keys, otherwise not called with IME_TEXT, not called on hw keyboard
     @Override
+    public boolean dispatchKeyEvent(KeyEvent ev) {
+        //intercept Back button
+        if (ev.getAction() == KeyEvent.ACTION_DOWN && ev.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+            OnSpecialKey(ev.getKeyCode());
+            return false;
+        }
+        return super.dispatchKeyEvent(ev);
+    }
+    /*@Override
     public boolean dispatchKeyEvent(KeyEvent ev) {
         if (ev.getAction() == KeyEvent.ACTION_DOWN) {
             int ch = ev.getUnicodeChar(ev.getMetaState());
@@ -328,6 +338,7 @@ implements TextWatcher, TextView.OnEditorActionListener
                     int pid = -1;
                     synchronized (mutex) {
                         daemon = Runtime.getRuntime().exec(cmd);
+                        Log.i("cppdraw", daemon.toString());
                         try {
                             Field f = daemon.getClass().getDeclaredField("pid");
                             f.setAccessible(true);
@@ -337,24 +348,35 @@ implements TextWatcher, TextView.OnEditorActionListener
                             pid = -1;
                         }
                     }
-                    OnDeamonStart(pid);
-                    int read;
-                    char[] buffer = new char[4096];
-                    StringBuffer output = new StringBuffer();
-
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(daemon.getInputStream()));
-                    while ((read = reader.read(buffer)) > 0) {
-                        output.append(buffer, 0, read);
+                    if (daemon.isAlive()) {
+                        Thread.sleep(100);
+                        //InputStreamReader rd = new InputStreamReader(daemon.getInputStream());
+                        //boolean ready = rd.ready();
+                        OnDeamonStart(pid);
                     }
-                    reader.close();
+                    /*StringBuffer output = new StringBuffer();
+                    BufferedReader readerErr = new BufferedReader(
+                            new InputStreamReader(daemon.getErrorStream()));
+                    BufferedReader readerIn = new BufferedReader(
+                            new InputStreamReader(daemon.getInputStream()));
+                    boolean firstRead = true;
+                    while (daemon.isAlive()) {
+                        while (readerIn.ready())
+                            output.append(readerIn.readLine() + "\n");
+                        while (readerErr.ready())
+                            output.append(readerErr.readLine() + "\n");
+                        if (output.length() > 0 && firstRead) {
+                            firstRead = false;
+                            OnDeamonStart(pid);
+                        }
+                        Thread.sleep(1);
+                    }
+                    readerIn.close();
+                    readerErr.close();*/
 
+                } catch (InterruptedException e) {
                 } catch (IOException e) {
-                    OnProgramOutput(e.toString());
                 }
-                /*catch (InterruptedException e) {
-                    OnProgramOutput(e.toString());
-                }*/
             }
         };
         th.start();

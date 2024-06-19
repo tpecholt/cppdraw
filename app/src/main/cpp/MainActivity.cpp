@@ -339,9 +339,6 @@ void MainActivity::Draw()
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
     /// @end TopWindow
-    
-    int ku = 2;
-    int j = 5;
 }
 
 void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
