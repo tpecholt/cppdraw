@@ -26,6 +26,7 @@ private:
     void Connect();
     int sockfd = 0;
     std::string error;
+    float timeStart;
 };
 
 extern ProgramActivity programActivity;

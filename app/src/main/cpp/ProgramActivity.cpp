@@ -54,6 +54,7 @@ void ProgramActivity::Connect()
         return;
     }
     error = "";
+    timeStart = ImGui::GetTime();
 }
 
 void ProgramActivity::Draw()
@@ -105,9 +106,9 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
         return;
 
     DrawCmd dcmd;
-    dcmd.time;
-    dcmd.touchDown;
-    dcmd.touchPos;
+    dcmd.time = ImGui::GetTime() - timeStart;
+    dcmd.touchDown = ImGui::IsMouseDown(0);
+    dcmd.touchPos = { ImGui::GetMousePos().x, ImGui::GetMousePos().y };
     int n = write(sockfd, &dcmd, sizeof(DrawCmd));
     if (n != sizeof(DrawCmd))
         return;
@@ -121,7 +122,7 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
 
     while (len > 0)
     {
-        int to_read = 100;
+        int to_read = 1024;
         if (to_read > len)
             to_read = len;
         n = read(sockfd, buf + off, to_read);
@@ -134,7 +135,16 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
             const auto &sh = shapes[i];
             switch (sh.kind) {
                 case Shape::Line:
-                    dl->AddLine({sh.x1, sh.y1}, {sh.x2, sh.y2}, sh.fg, sh.thick);
+                    dl->AddLine({ sh.l.x1, sh.l.y1 }, { sh.l.x2, sh.l.y2 }, sh.l.fg, sh.l.thick);
+                    break;
+                case Shape::Rect:
+                    dl->AddRect({ sh.r.x1, sh.r.y1 }, { sh.r.x1+sh.r.w, sh.r.y1+sh.r.h }, sh.l.fg, 0, 0, sh.l.thick);
+                    break;
+                case Shape::Circle:
+                    dl->AddCircle({ sh.c.x1, sh.c.y1 }, sh.c.r, sh.l.fg, 0, sh.l.thick);
+                    break;
+                case Shape::Text:
+                    dl->AddText({ sh.t.x1, sh.t.y1 }, sh.t.fg, sh.t.text);
                     break;
             }
         }

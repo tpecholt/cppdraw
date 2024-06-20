@@ -47,6 +47,7 @@ void Guide::Draw()
     ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xff323432);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 10*dp });
+    ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 5*dp);
     ImGui::SetNextWindowPos({ ioUserData->WorkRect().Max.x - animPos.x, ioUserData->WorkRect().Max.y - animPos.y }, 0, { 1, 1 });  //Bottom
     ImGui::SetNextWindowSize({ ioUserData->WorkRect().GetWidth(), 500*dp }); //{ 420*dp, 500*dp }
     bool tmpOpen = true;
@@ -101,6 +102,7 @@ void Guide::Draw()
     }
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     /// @end TopWindow
 }
@@ -116,13 +118,14 @@ void Guide::OnGuide(const ImRad::CustomWidgetArgs& args)
 
     ImRad::PushInvisibleScrollbar();
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
-    ImGui::BeginChild("md", args.size);
-    if (ImGui::IsWindowAppearing())
-        ImGui::SetScrollY(0);
+    if (ImGui::BeginChild("md", args.size))
+    {
+        if (ImGui::IsWindowAppearing())
+            ImGui::SetScrollY(0);
 
-    ImRad::ScrollWhenDragging(true);
-    ImGui::Markdown(content.c_str(), content.size(), cfg);
-
+        ImRad::ScrollWhenDragging(true);
+        ImGui::Markdown(content.c_str(), content.size(), cfg);
+    }
     ImGui::EndChild();
     ImGui::PopStyleVar();
     ImRad::PopInvisibleScrollbar();

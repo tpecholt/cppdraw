@@ -4,7 +4,7 @@ Welcome to [CppDraw](https://github.com/tpecholt/cppdraw)! CppDraw provides an e
 
 Start by #including *cppdraw.h* documented below.
 
-User code must contain *void draw(float dt)* function which will be called upon rendering.
+User code must contain *void draw()* function which will be called upon rendering.
 
 ## API Reference
 
@@ -43,6 +43,8 @@ void *textStyle*(std::string_view fontName, float size);
 void *thickness*(float thick);
 
 ### Functions - User Interaction
+
+float *time();*
 
 bool *isTouchDown*();
 

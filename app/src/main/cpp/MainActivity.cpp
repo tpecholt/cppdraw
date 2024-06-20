@@ -78,6 +78,7 @@ void MainActivity::Draw()
         return;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
+    ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 5*dp);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
     ImGui::SetNextWindowPos(ioUserData->WorkRect().Min);
     ImGui::SetNextWindowSize(ioUserData->WorkRect().GetSize()); //{ 400*dp, 700*dp }
@@ -247,7 +248,8 @@ void MainActivity::Draw()
                 /// @separator
 
                 /// @begin Button
-                if (ImGui::Button("{", { 40*dp, -1 }))
+                ImRad::Spacing(1);
+                if (ImGui::Button("\xee\x8c\x9c", { 36*dp, -1 }))
                 {
                     OnButton();
                 }
@@ -257,7 +259,7 @@ void MainActivity::Draw()
 
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::Button("}", { 40*dp, -1 }))
+                if (ImGui::Button("{", { 36*dp, -1 }))
                 {
                     OnButton();
                 }
@@ -267,7 +269,7 @@ void MainActivity::Draw()
 
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::Button("[", { 40*dp, -1 }))
+                if (ImGui::Button("}", { 36*dp, -1 }))
                 {
                     OnButton();
                 }
@@ -277,7 +279,7 @@ void MainActivity::Draw()
 
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::Button("]", { 40*dp, -1 }))
+                if (ImGui::Button("[", { 36*dp, -1 }))
                 {
                     OnButton();
                 }
@@ -287,7 +289,7 @@ void MainActivity::Draw()
 
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::Button("<", { 40*dp, -1 }))
+                if (ImGui::Button("]", { 36*dp, -1 }))
                 {
                     OnButton();
                 }
@@ -297,7 +299,7 @@ void MainActivity::Draw()
 
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::Button(">", { 40*dp, -1 }))
+                if (ImGui::Button("<", { 36*dp, -1 }))
                 {
                     OnButton();
                 }
@@ -307,7 +309,7 @@ void MainActivity::Draw()
 
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::Button("|", { 40*dp, -1 }))
+                if (ImGui::Button(">", { 36*dp, -1 }))
                 {
                     OnButton();
                 }
@@ -317,7 +319,17 @@ void MainActivity::Draw()
 
                 /// @begin Button
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::Button("=", { 40*dp, -1 }))
+                if (ImGui::Button("|", { 36*dp, -1 }))
+                {
+                    OnButton();
+                }
+                if (ImGui::IsItemFocused())
+                    OnButtonFocused();
+                /// @end Button
+
+                /// @begin Button
+                ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+                if (ImGui::Button("=", { 36*dp, -1 }))
                 {
                     OnButton();
                 }
@@ -338,6 +350,7 @@ void MainActivity::Draw()
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
     /// @end TopWindow
 }
 
@@ -352,6 +365,7 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
         ImGui::SetNextWindowFocus();
     }
 
+    float dp = ((ImRad::IOUserData *) ImGui::GetIO().UserData)->dpiScale;
     textEdit.SetImGuiChildIgnored(true);
     textEdit.SetLanguageDefinition(TextEditor::LanguageDefinition::CPlusPlus());
     textEdit.SetShowWhitespaces(false);
@@ -359,25 +373,32 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
                         darkMode ? darkPalette :
                         retroPalette);
 
+    ImRad::PushInvisibleScrollbar();
     ImGui::PushStyleColor(ImGuiCol_ChildBg, textEdit.GetPalette()[(int)TextEditor::PaletteIndex::Background]);
-    ImGui::BeginChild("textEdit", args.size);
-
-    textEdit.Render("textEdit", args.size);
-
-    //put overlay button in the same window to make it work
-    float dp = ((ImRad::IOUserData*)ImGui::GetIO().UserData)->dpiScale;
-    ImGui::SetCursorScreenPos({ ImGui::GetCurrentWindow()->InnerRect.Max.x-55*dp, ImGui::GetCurrentWindow()->InnerRect.Max.y-51*dp }); //overlayPos
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 25*dp);
-    if (ImGui::Button("\xee\x80\xb7", { 50*dp, 50*dp }))
+    if (ImGui::BeginChild("textEdit", args.size))
     {
-        OnRun();
-    }
-    ImGui::PopStyleVar();
-    if (ImGui::IsWindowFocused() && !ImGui::IsItemFocused())
-        ((ImRad::IOUserData*)ImGui::GetIO().UserData)->imeType = ImRad::ImeText;
+        ImRad::ScrollWhenDragging(true);
 
+        textEdit.Render("textEdit", args.size);
+
+        //leave right margin so it's possible to click cursor after the last character on line
+        ImGui::GetCurrentWindow()->ContentSize.x += 10 * dp;
+
+        //put overlay button in the same window to make it work
+        ImGui::SetCursorScreenPos({ImGui::GetCurrentWindow()->InnerRect.Max.x - 55 * dp,
+                                   ImGui::GetCurrentWindow()->InnerRect.Max.y -
+                                   51 * dp}); //overlayPos
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 25 * dp);
+        if (ImGui::Button("\xee\x80\xb7", {50 * dp, 50 * dp})) {
+            OnRun();
+        }
+        ImGui::PopStyleVar();
+        if (ImGui::IsWindowFocused() && !ImGui::IsItemFocused())
+            ((ImRad::IOUserData *) ImGui::GetIO().UserData)->imeType = ImRad::ImeText;
+    }
     ImGui::EndChild();
     ImGui::PopStyleColor();
+    ImRad::PopInvisibleScrollbar();
 }
 
 void MainActivity::OnButton()
@@ -385,7 +406,9 @@ void MainActivity::OnButton()
     ImGuiID id = ImGui::GetItemID();
     ImGuiWindow* win = ImGui::GetCurrentWindow();
     setEditorFocus = true;
-    if (id == win->GetID("{"))
+    if (id == win->GetID("\uE31C"))
+        textEdit.InsertText("\t");
+    else if (id == win->GetID("{"))
         textEdit.InsertText("{");
     else if (id == win->GetID("}"))
         textEdit.InsertText("}");
@@ -415,7 +438,7 @@ void MainActivity::OnRun()
     buildOutput.OpenPopup();
     std::string cmd = "usr/bin/clang-18"
                       " --sysroot=" + fs::current_path().string() +
-                      " -lc++ -Wall -o usr/tmp/prog.out" +
+                      " -lc++ -lm -Wall -o usr/tmp/prog.out" +
                       " usr/include/cppdraw.cpp " + fileName;
     ShellExecute(cmd, [this](std::string_view output) {
         int err = buildOutput.ParseOutput(output, fileName);
@@ -431,7 +454,7 @@ void MainActivity::OnRun()
 void MainActivity::OnFileNew()
 {
     const char* SRC_TEMPLATE =
-            "#include \"cppdraw.h\"\n\nvoid draw(float dt)\n{\n\n}\n";
+            "#include \"cppdraw.h\"\n\nvoid draw()\n{\n\n}\n";
 
     if (fileName != "")
         DoSaveFile(fileName);

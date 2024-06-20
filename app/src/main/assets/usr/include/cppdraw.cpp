@@ -1,5 +1,6 @@
 #include "cppdraw.h"
 #include <vector>
+//#include <string>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -9,14 +10,18 @@
 clr color_;
 clr bkcolor_;
 float thickness_;
+//std::string fontName_;
+float fontSize_;
+float time_;
 int touchDown_;
 vec2 touchPos_;
 vec2 screenSize_;
 
-static std::vector<Shape> shapes_;
+std::vector<Shape> shapes_;
+std::vector<char> strBuffer_;
 
 Shape::Shape(Kind k)
-: kind(k), fg(color_), bg(), thick(thickness_)
+: kind(k)
 {}
 
 clr RGB(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
@@ -24,25 +29,93 @@ clr RGB(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
     return (a << 24) | (b << 16) | (g << 8) | r;
 }
 
+float time()
+{
+    return time_;
+}
+
+bool touchDown()
+{
+    return touchDown_;
+}
+
+vec2 touchPos()
+{
+    return touchPos_;
+}
+
 void color(clr c)
 {
     color_ = c;
 }
 
+void bkcolor(clr c)
+{
+    bkcolor_ = c;
+}
+
+void thickenss(float th)
+{
+    thickness_ = th;
+}
+
 void line(float x1, float y1, float x2, float y2)
 {
-    Shape line(Shape::Line);
-    line.x1 = x1;
-    line.y1 = y1;
-    line.x2 = x2;
-    line.y2 = y2;
-    shapes_.push_back(line);
+    Shape sh(Shape::Line);
+    sh.l.x1 = x1;
+    sh.l.y1 = y1;
+    sh.l.x2 = x2;
+    sh.l.y2 = y2;
+    sh.l.fg = color_;
+    sh.l.thick = thickness_;
+    shapes_.push_back(sh);
+}
+
+void rectangle(float x1, float y1, float w, float h)
+{
+    Shape sh(Shape::Rect);
+    sh.r.x1 = x1;
+    sh.r.y1 = y1;
+    sh.r.w = w;
+    sh.r.h = h;
+    sh.r.fg = color_;
+    sh.r.bg = bkcolor_;
+    sh.r.thick = thickness_;
+    shapes_.push_back(sh);
+}
+
+void circle(float x1, float y1, float r)
+{
+    Shape sh(Shape::Circle);
+    sh.c.x1 = x1;
+    sh.c.y1 = y1;
+    sh.c.r = r;
+    sh.c.fg = color_;
+    sh.c.bg = bkcolor_;
+    sh.c.thick = thickness_;
+    shapes_.push_back(sh);
+}
+
+void text(float x, float y, std::string_view text)
+{
+    Shape sh(Shape::Text);
+    sh.t.y1 = x;
+    sh.t.y1 = y;
+    sh.t.fg = color_;
+    sh.t.text = strBuffer_.data() + strBuffer_.size();
+    strBuffer_.insert(strBuffer_.end(), text.begin(), text.end() + 1);
+    sh.t.font = 0;
+    sh.t.size = fontSize_;
+    shapes_.push_back(sh);
 }
 
 int main()
 {
+    strBuffer_.reserve(1024 * 1024);
+    FILE* vole = fopen("vole.txt", "w");
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
+        fprintf(vole, "can't socket"); fclose(vole);
         fprintf(stdout, "can't create socket (%d)\n", errno);
         return 1;
     }
@@ -52,18 +125,22 @@ int main()
     serv_addr.sin_port = htons(CPPDRAW_PORT);
     int enable = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable))) {
+        fprintf(vole, "can't setsockopt"); fclose(vole);
         fprintf(stdout, "can't setsockopt (%d)\n", errno);
         return 2;
     }
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+        fprintf(vole, "can't bind"); fclose(vole);
         fprintf(stdout, "can't bind (%d)\n", errno);
         return 2;
     }
     if (listen(sockfd, 5) < 0) {
+        fprintf(vole, "can't listen"); fclose(vole);
         fprintf(stdout, "can't listen (%d)\n", errno);
         return 2;
     }
-    printf("listening...\n"); //important to use \n
+    fprintf(vole, "listening\n"); fflush(vole);
+    fprintf(stdout, "listening...\n"); //important to use \n
     sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
     int newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
@@ -71,33 +148,47 @@ int main()
         fprintf(stdout, "can't accept (%d)\n", errno);
         return 3;
     }
-
+    fprintf(vole, "accepted\n"); fflush(vole);
+    fprintf(stdout, "connection accepted\n");
     while (true) {
         char buffer[256];
         int n = read(newsockfd, buffer, sizeof(buffer));
-        if (n != sizeof(DrawCmd))
+        if (n != sizeof(DrawCmd)) {
+            fprintf(vole, "read error\n");
+            fflush(vole);
             break;
+        }
         const DrawCmd* dcmd = (const DrawCmd*)buffer;
         screenSize_ = dcmd->screenSize;
+        time_ = dcmd->time;
         touchDown_ = dcmd->touchDown;
         touchPos_ = dcmd->touchPos;
         color_ = 0xffffffff;
         bkcolor_ = 0x0;
         thickness_ = 3.f;
+        //fontName_ = "";
+        fontSize_ = 18;
         shapes_.clear();
+        strBuffer_.clear();
 
-        draw(dcmd->time);
+        draw();
 
         uint32_t ss = htonl(shapes_.size());
         n = write(newsockfd, (void*)&ss, 4);
-        if (n < 0)
+        if (n < 0) {
+            fprintf(vole, "write error\n");
             break;
+        }
         n = write(newsockfd, shapes_.data(), shapes_.size() * sizeof(Shape));
-        if (n < 0)
+        if (n < 0) {
+            fprintf(vole, "write error\n");
             break;
+        }
     }
 
     close(newsockfd);
     close(sockfd);
+    fprintf(vole, "finished!\n");
+    fclose(vole);
     return 0;
 }

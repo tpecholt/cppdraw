@@ -841,12 +841,13 @@ void TextEditor::HandleMouseInputs()
 				mLastClick = (float)ImGui::GetTime();
 			}
 			// Mouse left button dragging (=> update selection)
-			else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0))
+			/*TOPE disable selection when dragging
+			 else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0))
 			{
 				io.WantCaptureMouse = true;
 				mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
 				SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
-			}
+			}*/
 		}
 	}
 }
@@ -1108,13 +1109,13 @@ void TextEditor::Render()
 		}
 	}
 
-
-	ImGui::Dummy(ImVec2((longest + 2), mLines.size() * mCharAdvance.y));
+	//TOPE: +GetFontSize() to create enough margin suitable for clicking position after the last character on scrolled line
+	ImGui::Dummy(ImVec2((longest + 2 + ImGui::GetFontSize()), mLines.size() * mCharAdvance.y));
 
 	if (mScrollToCursor)
 	{
 		EnsureCursorVisible();
-		//TOPE don't ImGui::SetWindowFocus();
+		//TOPE don't: ImGui::SetWindowFocus();
 		mScrollToCursor = false;
 	}
 }
