@@ -5,6 +5,8 @@
 #include "MainActivity.h"
 #include <filesystem>
 
+const std::string NEW_FILE = "New File...";
+
 OpenFileActivity openFileActivity;
 
 
@@ -24,6 +26,7 @@ void OpenFileActivity::Init()
     namespace fs = std::filesystem;
     std::error_code ec;
     files.clear();
+    files.push_back({ 0, NEW_FILE, "", "" });
     for (const auto& it : fs::directory_iterator(".", ec))
     {
         if (it.path().extension() != ".cpp")
@@ -43,7 +46,7 @@ void OpenFileActivity::Init()
             buf
         });
     }
-    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+    std::sort(files.begin() + 1, files.end(), [](const auto& a, const auto& b) {
         return a.time > b.time;
     });
 }
@@ -151,8 +154,8 @@ void OpenFileActivity::Draw()
             }
             ImGui::EndTable();
         }
-        ImRad::PopInvisibleScrollbar();
         ImGui::PopStyleVar();
+        ImRad::PopInvisibleScrollbar();
         /// @end Table
 
         /// @separator
@@ -173,6 +176,11 @@ void OpenFileActivity::OnSelect()
 {
     if (r < 0 || r >= files.size())
         return;
-    mainActivity.fileName = files[r].name;
-    mainActivity.Open();
+    if (files[r].name == NEW_FILE) {
+        //todo
+    }
+    else {
+        mainActivity.fileName = files[r].name;
+        mainActivity.Open();
+    }
 }

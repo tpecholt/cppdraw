@@ -106,6 +106,7 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
         return;
 
     DrawCmd dcmd;
+    dcmd.screenSize = { ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y };
     dcmd.time = ImGui::GetTime() - timeStart;
     dcmd.touchDown = ImGui::IsMouseDown(0);
     dcmd.touchPos = { ImGui::GetMousePos().x, ImGui::GetMousePos().y };
@@ -113,44 +114,68 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
     if (n != sizeof(DrawCmd))
         return;
 
-    char buf[10*1024];
-    n = read(sockfd, buf, 4);
+    buf.resize(4);
+    n = read(sockfd, buf.data(), 4);
     if (n != 4)
         return;
-    int len = ntohl(*(uint32_t*)buf) * sizeof(Shape);
+    int num = ntohl(*(uint32_t*)buf.data());
+    strBuf.resize(num);
     int off = 0;
+    while (num > 0)
+    {
+        int to_read = 10*1024;
+        if (to_read > num)
+            to_read = num;
+        n = read(sockfd, strBuf.data() + off, to_read);
+        off += n;
+        num -= n;
+    }
 
+    n = read(sockfd, buf.data(), 4);
+    if (n != 4)
+        return;
+    num = ntohl(*(uint32_t*)buf.data());
+    int len = num * sizeof(Shape);
+    buf.resize(len);
+    off = 0;
     while (len > 0)
     {
-        int to_read = 1024;
+        int to_read = 10*1024;
         if (to_read > len)
             to_read = len;
-        n = read(sockfd, buf + off, to_read);
+        n = read(sockfd, buf.data() + off, to_read);
         len -= n;
         int nsh = (off + n) / sizeof(Shape);
+        if (!nsh) {
+            off += n;
+            continue;
+        }
 
         auto *dl = ImGui::GetWindowDrawList();
-        const Shape *shapes = (const Shape *) buf;
+        const Shape *shapes = (const Shape *)buf.data();
         for (size_t i = 0; i < nsh; ++i) {
             const auto &sh = shapes[i];
             switch (sh.kind) {
                 case Shape::Line:
-                    dl->AddLine({ sh.l.x1, sh.l.y1 }, { sh.l.x2, sh.l.y2 }, sh.l.fg, sh.l.thick);
+                    dl->AddLine({ sh.l.x1, sh.l.y1 }, { sh.l.x2, sh.l.y2 }, sh.l.color, sh.l.thick);
                     break;
                 case Shape::Rect:
-                    dl->AddRect({ sh.r.x1, sh.r.y1 }, { sh.r.x1+sh.r.w, sh.r.y1+sh.r.h }, sh.l.fg, 0, 0, sh.l.thick);
+                    dl->AddRect({ sh.r.x1, sh.r.y1 }, { sh.r.x1+sh.r.w, sh.r.y1+sh.r.h }, sh.l.color, 0, 0, sh.l.thick);
+                    break;
+                case Shape::FillRect:
+                    dl->AddRectFilled({ sh.r.x1, sh.r.y1 }, { sh.r.x1+sh.r.w, sh.r.y1+sh.r.h }, sh.l.color);
                     break;
                 case Shape::Circle:
-                    dl->AddCircle({ sh.c.x1, sh.c.y1 }, sh.c.r, sh.l.fg, 0, sh.l.thick);
+                    dl->AddCircle({ sh.c.x1, sh.c.y1 }, sh.c.r, sh.l.color, 0, sh.l.thick);
                     break;
                 case Shape::Text:
-                    dl->AddText({ sh.t.x1, sh.t.y1 }, sh.t.fg, sh.t.text);
+                    dl->AddText({ sh.t.x1, sh.t.y1 }, sh.t.color, strBuf.data() + sh.t.text);
                     break;
             }
         }
 
         //copy unfinished Shape to front
         off = (off + n) % sizeof(Shape);
-        memcpy(buf, buf + nsh * sizeof(Shape), off);
+        memcpy(buf.data(), buf.data() + nsh * sizeof(Shape), off);
     }
 }

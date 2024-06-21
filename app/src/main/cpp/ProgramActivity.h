@@ -27,6 +27,7 @@ private:
     int sockfd = 0;
     std::string error;
     float timeStart;
+    std::vector<char> strBuf, buf;
 };
 
 extern ProgramActivity programActivity;

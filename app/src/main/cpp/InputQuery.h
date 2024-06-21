@@ -19,10 +19,10 @@ public:
 private:
     /// @begin impl
     void Init();
-
     ImGuiID ID = 0;
     ImRad::ModalResult modalResult;
     std::function<void(ImRad::ModalResult)> callback;
+
 
     /// @end impl
 };

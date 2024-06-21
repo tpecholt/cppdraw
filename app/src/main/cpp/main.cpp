@@ -270,7 +270,7 @@ void Init(struct android_app* app)
                                               g_IOUserData.dpiScale * 18.0f);
         IM_ASSERT(font != nullptr);
         cfg.MergeMode = true;
-        cfg.GlyphOffset.y = 20.f * g_IOUserData.dpiScale / 5;
+        cfg.GlyphOffset.y = 20.0f * 0.25f * g_IOUserData.dpiScale;
         font = io.Fonts->AddFontFromMemoryTTF(material_data, material_size,
                                               g_IOUserData.dpiScale * 20.0f, &cfg, icons_ranges);
         IM_ASSERT(font != nullptr);
@@ -505,27 +505,35 @@ void StopDeamon()
 //broken into several steps to avoid time limit to init
 void InstallClang()
 {
-    //cppdraw.h,cpp,usr.zip
+    void* data;
+    int size;
+    //cppdraw.h/cpp
     fs::create_directories("usr/include");
-    for (auto fn : { "usr.zip", "usr/include/cppdraw.h", "usr/include/cppdraw.cpp" }) {
-        void* data;
-        int size = GetAssetData(fn, &data);
+    for (auto fn : { "usr/include/cppdraw.h", "usr/include/cppdraw.cpp" }) {
+        size = GetAssetData(fn, &data);
         std::ofstream fout2(fn, std::ios::binary);
         fout2.write((char *) data, size);
     }
-    JniBlock bl;
-    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "unzip",
-                                          "(Ljava/lang/String;Ljava/lang/String;)I");
-    if (method_id == nullptr)
-        return;
-    jstring jfrom = bl->NewStringUTF((fs::current_path() / "usr.zip").c_str());
-    jstring jto = bl->NewStringUTF((fs::current_path()).c_str());
-    bl->CallIntMethod(g_App->activity->clazz, method_id, jfrom, jto);
-    bl->DeleteLocalRef(jfrom);
-    bl->DeleteLocalRef(jto);
 
-    system("chmod 777 usr/bin/clang-18");
-    system("chmod 777 usr/bin/lld");
-    system("ln -s lld usr/bin/ld.lld");
+    if (!fs::is_regular_file("usr.zip"))
+    {
+        size = GetAssetData("usr.zip", &data);
+        std::ofstream fout2("usr.zip", std::ios::binary);
+        fout2.write((char *) data, size);
 
+        JniBlock bl;
+        jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "unzip",
+                                              "(Ljava/lang/String;Ljava/lang/String;)I");
+        if (method_id == nullptr)
+            return;
+        jstring jfrom = bl->NewStringUTF((fs::current_path() / "usr.zip").c_str());
+        jstring jto = bl->NewStringUTF((fs::current_path()).c_str());
+        bl->CallIntMethod(g_App->activity->clazz, method_id, jfrom, jto);
+        bl->DeleteLocalRef(jfrom);
+        bl->DeleteLocalRef(jto);
+
+        system("chmod 777 usr/bin/clang-18");
+        system("chmod 777 usr/bin/lld");
+        system("ln -s lld usr/bin/ld.lld");
+    }
 }

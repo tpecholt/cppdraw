@@ -8,7 +8,6 @@
 #include <unistd.h>
 
 clr color_;
-clr bkcolor_;
 float thickness_;
 //std::string fontName_;
 float fontSize_;
@@ -34,6 +33,11 @@ float time()
     return time_;
 }
 
+vec2 screenSize()
+{
+    return screenSize_;
+}
+
 bool touchDown()
 {
     return touchDown_;
@@ -49,12 +53,7 @@ void color(clr c)
     color_ = c;
 }
 
-void bkcolor(clr c)
-{
-    bkcolor_ = c;
-}
-
-void thickenss(float th)
+void thickness(float th)
 {
     thickness_ = th;
 }
@@ -66,7 +65,7 @@ void line(float x1, float y1, float x2, float y2)
     sh.l.y1 = y1;
     sh.l.x2 = x2;
     sh.l.y2 = y2;
-    sh.l.fg = color_;
+    sh.l.color = color_;
     sh.l.thick = thickness_;
     shapes_.push_back(sh);
 }
@@ -78,9 +77,19 @@ void rectangle(float x1, float y1, float w, float h)
     sh.r.y1 = y1;
     sh.r.w = w;
     sh.r.h = h;
-    sh.r.fg = color_;
-    sh.r.bg = bkcolor_;
+    sh.r.color = color_;
     sh.r.thick = thickness_;
+    shapes_.push_back(sh);
+}
+
+void fillRect(float x1, float y1, float w, float h)
+{
+    Shape sh(Shape::FillRect);
+    sh.r.x1 = x1;
+    sh.r.y1 = y1;
+    sh.r.w = w;
+    sh.r.h = h;
+    sh.r.color = color_;
     shapes_.push_back(sh);
 }
 
@@ -90,19 +99,18 @@ void circle(float x1, float y1, float r)
     sh.c.x1 = x1;
     sh.c.y1 = y1;
     sh.c.r = r;
-    sh.c.fg = color_;
-    sh.c.bg = bkcolor_;
+    sh.c.color = color_;
     sh.c.thick = thickness_;
     shapes_.push_back(sh);
 }
 
-void text(float x, float y, std::string_view text)
+void text(float x, float y, ZStringView text)
 {
     Shape sh(Shape::Text);
-    sh.t.y1 = x;
+    sh.t.x1 = x;
     sh.t.y1 = y;
-    sh.t.fg = color_;
-    sh.t.text = strBuffer_.data() + strBuffer_.size();
+    sh.t.color = color_;
+    sh.t.text = strBuffer_.size();
     strBuffer_.insert(strBuffer_.end(), text.begin(), text.end() + 1);
     sh.t.font = 0;
     sh.t.size = fontSize_;
@@ -164,7 +172,6 @@ int main()
         touchDown_ = dcmd->touchDown;
         touchPos_ = dcmd->touchPos;
         color_ = 0xffffffff;
-        bkcolor_ = 0x0;
         thickness_ = 3.f;
         //fontName_ = "";
         fontSize_ = 18;
@@ -173,8 +180,19 @@ int main()
 
         draw();
 
-        uint32_t ss = htonl(shapes_.size());
-        n = write(newsockfd, (void*)&ss, 4);
+        uint32_t num = htonl(strBuffer_.size());
+        n = write(newsockfd, (void*)&num, 4);
+        if (n < 0) {
+            fprintf(vole, "write error\n");
+            break;
+        }
+        n = write(newsockfd, strBuffer_.data(), strBuffer_.size());
+        if (n < 0) {
+            fprintf(vole, "write error\n");
+            break;
+        }
+        num = htonl(shapes_.size());
+        n = write(newsockfd, (void*)&num, 4);
         if (n < 0) {
             fprintf(vole, "write error\n");
             break;
@@ -184,6 +202,7 @@ int main()
             fprintf(vole, "write error\n");
             break;
         }
+
     }
 
     close(newsockfd);

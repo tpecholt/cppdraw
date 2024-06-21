@@ -20,8 +20,6 @@ struct *vec2* {
 
 ### Functions - Rendering
 
-void *bkcolor*(clr c);
-
 void *circle*(float x, float y, float radius);
 
 void *color*(clr c);
@@ -32,22 +30,22 @@ void *line*(float x1, float y1, float x2, float y2);
 
 void *rectangle*(float x, float y, float w, float h);
 
+void *fillRect*(float x, float y, float w, float h);
+
 vec2 *screenSize*();
 
-void *text*(float x, float y, std::string_view str);
+void *text*(float x, float y, StringView str);
 
-vec2 *textExtents*(std::string_view str);
+vec2 *textExtents*(StringView str);
 
-void *textStyle*(std::string_view fontName, float size);
+void *textStyle*(StringView fontName, float size);
 
 void *thickness*(float thick);
 
 ### Functions - User Interaction
 
-float *time();*
+float *time*();
 
-bool *isTouchDown*();
+bool *touchDown*();
 
 vec2 *touchPos*();
-
-.

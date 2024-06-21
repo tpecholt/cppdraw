@@ -45,13 +45,14 @@ void Guide::Draw()
     const float dp = ioUserData->dpiScale;
     ID = ImGui::GetID("###Guide");
     ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xff323432);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 10*dp, 10*dp });
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 10*dp });
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10*dp);
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 5*dp);
     ImGui::SetNextWindowPos({ ioUserData->WorkRect().Max.x - animPos.x, ioUserData->WorkRect().Max.y - animPos.y }, 0, { 1, 1 });  //Bottom
     ImGui::SetNextWindowSize({ ioUserData->WorkRect().GetWidth(), 500*dp }); //{ 420*dp, 500*dp }
     bool tmpOpen = true;
-    if (ImGui::BeginPopupModal("title###Guide", &tmpOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse))
+    if (ImGui::BeginPopupModal("title###Guide", &tmpOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         animator.Tick();
         if (!ImRad::MoveWhenDragging(ImGuiDir_Down, animPos, ioUserData->dimBgRatio))
@@ -59,6 +60,7 @@ void Guide::Draw()
         if (ImGui::IsKeyPressed(ImGuiKey_AppBack))
             ClosePopup();
         ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
+        ImRad::RenderFilledWindowCorners(ImDrawFlags_RoundCornersBottom);
         if (modalResult != ImRad::None && animator.IsDone())
         {
             ImGui::CloseCurrentPopup();
@@ -81,7 +83,6 @@ void Guide::Draw()
 
             /// @begin Separator
             ImRad::TableNextColumn(1);
-            ImRad::Spacing(1);
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3*dp);
             /// @end Separator
 
@@ -100,6 +101,7 @@ void Guide::Draw()
         /// @separator
         ImGui::EndPopup();
     }
+    ImGui::PopStyleVar();
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();

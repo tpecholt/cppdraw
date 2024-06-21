@@ -39,7 +39,7 @@ void BuildOutput::Draw()
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 10*dp });
     ImGui::SetNextWindowPos({ ioUserData->WorkRect().Max.x - animPos.x, ioUserData->WorkRect().Max.y - animPos.y }, 0, { 1, 1 });  //Bottom
     ImGui::SetNextWindowSize({ ioUserData->WorkRect().GetWidth(), 400*dp }); //{ 420*dp, 400*dp }
-    if (ImGui::BeginPopup("title###BuildOutput", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse))
+    if (ImGui::BeginPopup("title###BuildOutput", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         animator.Tick();
         if (!ImRad::MoveWhenDragging(ImGuiDir_Down, animPos, ioUserData->dimBgRatio))
@@ -127,6 +127,8 @@ void BuildOutput::Draw()
     ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     /// @end TopWindow
+        sel = newSel;
+        
 }
 
 int BuildOutput::ParseOutput(std::string_view str, std::string_view fname)
