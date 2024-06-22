@@ -280,7 +280,6 @@ bool ImGui_ImplAndroid_Init(ANativeWindow* window)
     // Setup backend capabilities flags
     ImGuiIO& io = ImGui::GetIO();
     io.BackendPlatformName = "imgui_impl_android";
-
     return true;
 }
 

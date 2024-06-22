@@ -93,6 +93,19 @@ void fillRect(float x1, float y1, float w, float h)
     shapes_.push_back(sh);
 }
 
+void fillTriangle(float x1, float y1, float x2, float y2, float x3, float y3)
+{
+    Shape sh(Shape::FillTriangle);
+    sh.t.x1 = x1;
+    sh.t.y1 = y1;
+    sh.t.x2 = x2;
+    sh.t.y2 = y2;
+    sh.t.x3 = x3;
+    sh.t.y3 = y3;
+    sh.t.color = color_;
+    shapes_.push_back(sh);
+}
+
 void circle(float x1, float y1, float r)
 {
     Shape sh(Shape::Circle);
@@ -107,13 +120,13 @@ void circle(float x1, float y1, float r)
 void text(float x, float y, ZStringView text)
 {
     Shape sh(Shape::Text);
-    sh.t.x1 = x;
-    sh.t.y1 = y;
-    sh.t.color = color_;
-    sh.t.text = strBuffer_.size();
+    sh.x.x1 = x;
+    sh.x.y1 = y;
+    sh.x.color = color_;
+    sh.x.text = strBuffer_.size();
     strBuffer_.insert(strBuffer_.end(), text.begin(), text.end() + 1);
-    sh.t.font = 0;
-    sh.t.size = fontSize_;
+    sh.x.font = 0;
+    sh.x.size = fontSize_;
     shapes_.push_back(sh);
 }
 

@@ -28,6 +28,7 @@ private:
 
     void OnClose();
     void OnSelect();
+    void OnNewFile();
 
     /// @end impl
 };

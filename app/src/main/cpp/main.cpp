@@ -48,6 +48,7 @@ static void GetDisplayInfo();
 static void UpdateScreenRect();
 static void InstallClang();
 /*static*/ void ShellExecute(const std::string& cmd, std::function<void(const char*)> clb = {});
+static void SetClipboardText(void*, const char*);
 
 //-----------------------------------------------------------------
 
@@ -230,6 +231,7 @@ void Init(struct android_app* app)
         //mainActivity.homeDir = app->activity->internalDataPath;
         std::error_code ec;
         fs::current_path(app->activity->internalDataPath, ec);
+        io.SetClipboardTextFn = SetClipboardText;
 
         std::thread prepareStuff(InstallClang);
         prepareStuff.detach();
@@ -467,6 +469,17 @@ void UpdateScreenRect()
             g_IOUserData.displayOffsetMax = { 0, (float)g_KbdHeight };
             break;
     }
+}
+
+void SetClipboardText(void*, const char* txt)
+{
+    JniBlock bl;
+    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "setClipboardText", "(Ljava/lang/String;)V");
+    if (method_id == nullptr)
+        return;
+    jstring jtxt = bl->NewStringUTF(txt);
+    bl->CallVoidMethod(g_App->activity->clazz, method_id, jtxt);
+    bl->DeleteLocalRef(jtxt);
 }
 
 void ShellExecute(const std::string& cmd, std::function<void(std::string_view)> clb)

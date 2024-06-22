@@ -54,6 +54,10 @@ struct CircleShape {
     clr color;
     float thick;
 };
+struct TriangleShape {
+    float x1, y1, x2, y2, x3, y3;
+    clr color;
+};
 struct TextShape {
     float x1, y1;
     size_t text;
@@ -63,13 +67,14 @@ struct TextShape {
 };
 
 struct Shape {
-    enum Kind { Line, Rect, FillRect, Circle, Text };
+    enum Kind { Line, Rect, FillRect, FillTriangle, Circle, Text };
     Kind kind;
     union {
         LineShape l;
         RectShape r;
         CircleShape c;
-        TextShape t;
+        TriangleShape t;
+        TextShape x;
     };
     Shape(Kind k);
 };
@@ -87,6 +92,8 @@ void line(float x1, float y1, float x2, float y2);
 void rectangle(float x1, float y1, float w, float h);
 
 void fillRect(float x1, float y1, float w, float h);
+
+void fillTriangle(float x1, float y1, float x2, float y2, float x3, float y3);
 
 void circle(float x1, float y1, float r);
 

@@ -6,6 +6,7 @@
 
 InputQuery inputQuery;
 
+namespace fs = std::filesystem;
 
 void InputQuery::OpenPopup(std::function<void(ImRad::ModalResult)> clb)
 {
@@ -37,6 +38,7 @@ void InputQuery::Draw()
     auto* ioUserData = (ImRad::IOUserData*)ImGui::GetIO().UserData;
     const float dp = ioUserData->dpiScale;
     ID = ImGui::GetID("###InputQuery");
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xff323432);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 10*dp, 10*dp });
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 10*dp, 5*dp });
     ImGui::SetNextWindowPos(ioUserData->WorkRect().Min);  //Top
@@ -44,6 +46,8 @@ void InputQuery::Draw()
     bool tmpOpen = true;
     if (ImGui::BeginPopupModal("title###InputQuery", &tmpOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
     {
+        ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
+        ImRad::RenderFilledWindowCorners(ImDrawFlags_RoundCornersTop);
         if (modalResult != ImRad::None)
         {
             ImGui::CloseCurrentPopup();
@@ -81,19 +85,25 @@ void InputQuery::Draw()
 
             /// @begin Button
             ImRad::TableNextColumn(1);
-            if (ImGui::Button("OK", { 100*dp, 30*dp }))
+            ImGui::BeginDisabled(value.empty());
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            if (ImGui::Button("OK", { 60*dp, 30*dp }))
             {
                 ClosePopup(ImRad::Ok);
             }
+            ImGui::PopStyleColor();
+            ImGui::EndDisabled();
             /// @end Button
 
             /// @begin Button
             ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-            if (ImGui::Button("Cancel", { 100*dp, 30*dp }) ||
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            if (ImGui::Button("Cancel", { 60*dp, 30*dp }) ||
                 (!ImRad::IsItemDisabled() && ImGui::IsKeyPressed(ImGuiKey_Escape, false)))
             {
                 ClosePopup(ImRad::Cancel);
             }
+            ImGui::PopStyleColor();
             /// @end Button
 
 
@@ -107,5 +117,28 @@ void InputQuery::Draw()
     }
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
     /// @end TopWindow
+}
+
+void InputQuery::EnterFileName(const std::string& l, std::function<void(const std::string&)> clb)
+{
+    label = l;
+    value = "";
+    OpenPopup([this,clb](ImRad::ModalResult) {
+        std::string fn = value;
+        if (fn.find(".") == std::string::npos)
+            fn += ".cpp";
+        if (fs::exists(/*homeDir + "/" +*/ fn)) {
+            messageBox.buttons = ImRad::Yes | ImRad::No;
+            messageBox.message = "'" + fn + "' already exists. Overwrite?";
+            messageBox.OpenPopup([fn,clb](ImRad::ModalResult mr) {
+                if (mr == ImRad::Yes)
+                    clb(fn);
+            });
+        }
+        else {
+            clb(fn);
+        }
+    });
 }

@@ -16,6 +16,8 @@ public:
     std::string value;
     /// @end interface
 
+    void EnterFileName(const std::string& label, std::function<void(const std::string&)> clb);
+
 private:
     /// @begin impl
     void Init();

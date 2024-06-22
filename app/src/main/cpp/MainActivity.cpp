@@ -44,6 +44,8 @@ void MainActivity::Init()
     std::string content;
     while (std::getline(fin, line))
         content += line + "\n";
+    if (!content.empty())
+        content.pop_back();
     textEdit.SetText(content);
 
     int c = (int)TextEditor::PaletteIndex::Cursor;
@@ -150,11 +152,8 @@ void MainActivity::Draw()
 
             /// @begin MenuIt
             ImGui::Separator();
-            ImGui::MenuItem("Copy All", "", false);
-            /// @end MenuIt
-
-            /// @begin MenuIt
-            ImGui::MenuItem("Paste All", "", false);
+            if (ImGui::MenuItem("Copy All", "", false))
+                OnCopyAll();
             /// @end MenuIt
 
             /// @separator
@@ -433,12 +432,12 @@ void MainActivity::OnButtonFocused()
 
 void MainActivity::OnRun()
 {
-    DoSaveFile(fileName);
+    SaveFile(fileName);
     buildOutput.output = { { BuildOutput::OutputRow::note, 0, 0, "Build has started..." } };
     buildOutput.OpenPopup();
     std::string cmd = "usr/bin/clang-18"
                       " --sysroot=" + fs::current_path().string() +
-                      " -lc++ -lm -Wall -o usr/tmp/prog.out" +
+                      " -lc++ -lc++_shared -lm -Wall -o usr/tmp/prog.out" +
                       " usr/include/cppdraw.cpp " + fileName;
     ShellExecute(cmd, [this](std::string_view output) {
         int err = buildOutput.ParseOutput(output, fileName);
@@ -453,60 +452,22 @@ void MainActivity::OnRun()
 
 void MainActivity::OnFileNew()
 {
-    const char* SRC_TEMPLATE =
-            "#include \"cppdraw.h\"\n\nvoid draw()\n{\n\n}\n";
-
-    if (fileName != "")
-        DoSaveFile(fileName);
-    inputQuery.label = "New file name:";
-    inputQuery.value = "";
-    inputQuery.OpenPopup([this,SRC_TEMPLATE](ImRad::ModalResult) {
-        std::string fn = inputQuery.value;
-        if (fn.find(".") == std::string::npos)
-            fn += ".cpp";
-        if (fs::exists(/*homeDir + "/" +*/ fn)) {
-            messageBox.buttons = ImRad::Yes | ImRad::No;
-            messageBox.message = "'" + fn + "' already exists. Overwrite?";
-            messageBox.OpenPopup([this,fn,SRC_TEMPLATE](ImRad::ModalResult mr) {
-                if (mr == ImRad::Yes) {
-                    textEdit.SetText(SRC_TEMPLATE);
-                    DoSaveFile(fn);
-                }
-            });
-        }
-        else {
-            textEdit.SetText(SRC_TEMPLATE);
-            DoSaveFile(fn);
-        }
+    inputQuery.EnterFileName("New file name:", [this](const std::string& fn) {
+        NewFile(fn);
     });
 }
 
 void MainActivity::OnFileSaveAs()
 {
-    inputQuery.label = "New file name:";
-    inputQuery.value = "";
-    inputQuery.OpenPopup([this](ImRad::ModalResult) {
-        std::string fn = inputQuery.value;
-        if (fn.find(".") == std::string::npos)
-            fn += ".cpp";
-        if (fs::exists(/*homeDir + "/" +*/ fn)) {
-            messageBox.buttons = ImRad::Yes | ImRad::No;
-            messageBox.message = "'" + fn + "' already exists. Overwrite?";
-            messageBox.OpenPopup([this,fn](ImRad::ModalResult mr) {
-                if (mr == ImRad::Yes)
-                    DoSaveFile(fn);
-            });
-        }
-        else {
-            DoSaveFile(fn);
-        }
+    inputQuery.EnterFileName("New file name:", [this](const std::string& fn) {
+        SaveFile(fn);
     });
 }
 
 void MainActivity::OnFileOpen()
 {
     if (fileName != "")
-        DoSaveFile(fileName);
+        SaveFile(fileName);
     openFileActivity.Open();
 }
 
@@ -552,7 +513,24 @@ void MainActivity::OnHelp()
     guide.OpenPopup();
 }
 
-void MainActivity::DoSaveFile(const std::string& fname)
+void MainActivity::OnCopyAll()
+{
+    ImGui::SetClipboardText(textEdit.GetText().c_str());
+}
+
+void MainActivity::NewFile(const std::string& fname)
+{
+    const char* SRC_TEMPLATE =
+            "#include \"cppdraw.h\"\n\n"
+            "void draw()\n{\n"
+            "\tcolor(touchDown() ? 0xff0000ff : 0xff00ff00);\n"
+            "\tfillRect(100, 100, 300, 200);\n"
+            "}\n";
+    textEdit.SetText(SRC_TEMPLATE);
+    SaveFile(fname);
+}
+
+void MainActivity::SaveFile(const std::string& fname)
 {
     std::string path = fname;
     if (fname.find(".") == std::string::npos)
@@ -565,7 +543,7 @@ void MainActivity::DoSaveFile(const std::string& fname)
         return;
     }
     fout << textEdit.GetText();
-    fileName = fname;
+    fileName = path;
 }
 
 void MainActivity::GoTo(int line, int column)
@@ -573,3 +551,4 @@ void MainActivity::GoTo(int line, int column)
     if (line >= 1)
         textEdit.SetCursorPosition({ line - 1, column - 1 });
 }
+

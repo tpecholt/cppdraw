@@ -44,6 +44,7 @@ void BuildOutput::Draw()
         animator.Tick();
         if (!ImRad::MoveWhenDragging(ImGuiDir_Down, animPos, ioUserData->dimBgRatio))
             ClosePopup();
+        ImRad::RenderFilledWindowCorners(ImDrawFlags_RoundCornersBottom);
         if (modalResult != ImRad::None && animator.IsDone())
         {
             ImGui::CloseCurrentPopup();
@@ -127,6 +128,8 @@ void BuildOutput::Draw()
     ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     /// @end TopWindow
+        sel = newSel;
+        
         sel = newSel;
         
 }

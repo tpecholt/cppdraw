@@ -24,13 +24,13 @@ void *circle*(float x, float y, float radius);
 
 void *color*(clr c);
 
-void *convexPoly*(const std::vector<vec2>& coords);
+void *fillRect*(float x, float y, float w, float h);
+
+void *fillTriangle*(float x1, float y1, float x2, float y2, float x3, float y3);
 
 void *line*(float x1, float y1, float x2, float y2);
 
 void *rectangle*(float x, float y, float w, float h);
-
-void *fillRect*(float x, float y, float w, float h);
 
 vec2 *screenSize*();
 

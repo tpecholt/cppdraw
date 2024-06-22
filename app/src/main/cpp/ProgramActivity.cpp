@@ -168,8 +168,11 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
                 case Shape::Circle:
                     dl->AddCircle({ sh.c.x1, sh.c.y1 }, sh.c.r, sh.l.color, 0, sh.l.thick);
                     break;
+                case Shape::FillTriangle:
+                    dl->AddTriangleFilled({ sh.t.x1, sh.t.y1 }, { sh.t.x2, sh.t.y2 }, { sh.t.x3, sh.t.y3 }, sh.t.color);
+                    break;
                 case Shape::Text:
-                    dl->AddText({ sh.t.x1, sh.t.y1 }, sh.t.color, strBuf.data() + sh.t.text);
+                    dl->AddText({ sh.x.x1, sh.x.y1 }, sh.x.color, strBuf.data() + sh.x.text);
                     break;
             }
         }

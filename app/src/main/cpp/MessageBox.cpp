@@ -36,6 +36,7 @@ void MessageBox::Draw()
     auto* ioUserData = (ImRad::IOUserData*)ImGui::GetIO().UserData;
     const float dp = ioUserData->dpiScale;
     ID = ImGui::GetID("###MessageBox");
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xff323432);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 10*dp, 10*dp });
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 10*dp, 5*dp });
     ImGui::SetNextWindowPos(ioUserData->WorkRect().GetCenter(), 0, { 0.5f, 0.5f }); //Center
@@ -43,6 +44,7 @@ void MessageBox::Draw()
     bool tmpOpen = true;
     if (ImGui::BeginPopupModal("title###MessageBox", &tmpOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
     {
+        ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
         if (modalResult != ImRad::None)
         {
             ImGui::CloseCurrentPopup();
@@ -146,5 +148,6 @@ void MessageBox::Draw()
     }
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
     /// @end TopWindow
 }

@@ -3,9 +3,8 @@
 
 #include "OpenFileActivity.h"
 #include "MainActivity.h"
+#include "InputQuery.h"
 #include <filesystem>
-
-const std::string NEW_FILE = "New File...";
 
 OpenFileActivity openFileActivity;
 
@@ -26,7 +25,6 @@ void OpenFileActivity::Init()
     namespace fs = std::filesystem;
     std::error_code ec;
     files.clear();
-    files.push_back({ 0, NEW_FILE, "", "" });
     for (const auto& it : fs::directory_iterator(".", ec))
     {
         if (it.path().extension() != ".cpp")
@@ -71,6 +69,7 @@ void OpenFileActivity::Draw()
         /// @separator
 
         // TODO: Add Draw calls of dependent popup windows here
+        inputQuery.Draw();
 
         /// @begin Child
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 5*dp, 0 });
@@ -93,10 +92,20 @@ void OpenFileActivity::Draw()
             ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
             ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, { 0, 0.5f });
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImRad::Selectable("Open File", false, ImGuiSelectableFlags_DontClosePopups, { 0, -1 });
+            ImRad::Selectable("Open File", false, ImGuiSelectableFlags_DontClosePopups, { -40*dp, -1 });
             ImGui::PopItemFlag();
             ImGui::PopStyleVar();
             /// @end Selectable
+
+            /// @begin Button
+            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            if (ImGui::Button("\xee\x80\xae", { 35*dp, -1 }))
+            {
+                OnNewFile();
+            }
+            ImGui::PopStyleColor();
+            /// @end Button
 
             /// @separator
             ImGui::PopStyleVar();
@@ -108,8 +117,9 @@ void OpenFileActivity::Draw()
 
         /// @begin Table
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 5*dp, 0 });
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, 0xff003333);
         ImRad::PushInvisibleScrollbar();
-        if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_BordersInnerH, { -1, -1 }))
+        if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_ScrollY, { -1, -1 }))
         {
             ImRad::ScrollWhenDragging(true);
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0);
@@ -154,6 +164,7 @@ void OpenFileActivity::Draw()
             }
             ImGui::EndTable();
         }
+        ImGui::PopStyleColor();
         ImGui::PopStyleVar();
         ImRad::PopInvisibleScrollbar();
         /// @end Table
@@ -176,11 +187,14 @@ void OpenFileActivity::OnSelect()
 {
     if (r < 0 || r >= files.size())
         return;
-    if (files[r].name == NEW_FILE) {
-        //todo
-    }
-    else {
-        mainActivity.fileName = files[r].name;
+    mainActivity.fileName = files[r].name;
+    mainActivity.Open();
+}
+
+void OpenFileActivity::OnNewFile()
+{
+    inputQuery.EnterFileName("New file name:", [](const std::string& fn) {
+        mainActivity.NewFile(fn);
         mainActivity.Open();
-    }
+    });
 }

@@ -20,6 +20,8 @@ public:
     /// @end interface
 
     void GoTo(int, int);
+    void NewFile(const std::string& fname);
+    void SaveFile(const std::string& fname);
 
 private:
     /// @begin impl
@@ -37,6 +39,7 @@ private:
     void OnRetroMode();
     void OnHelp();
     void OnLightMode();
+    void OnCopyAll();
 
     bool setEditorFocus;
     TextEditor textEdit;
@@ -46,8 +49,6 @@ private:
     /// @end impl
 
     bool startProgram = false;
-
-    void DoSaveFile(const std::string& fname);
 };
 
 extern MainActivity mainActivity;
