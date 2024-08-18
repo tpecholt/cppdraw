@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #pragma once
@@ -29,14 +29,14 @@ public:
 private:
     /// @begin impl
     void Init();
-    ImGuiID ID = 0;
-    ImRad::ModalResult modalResult;
-    ImRad::Animator animator;
-    ImVec2 animPos;
 
     void OnBeginRow();
     void OnItemHovered();
 
+    ImGuiID ID = 0;
+    ImRad::ModalResult modalResult;
+    ImRad::Animator animator;
+    ImVec2 animPos;
     /// @end impl
 };
 

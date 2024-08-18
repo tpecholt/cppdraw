@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #include "OpenFileActivity.h"
@@ -56,6 +56,8 @@ void OpenFileActivity::Draw()
     /// @begin TopWindow
     auto* ioUserData = (ImRad::IOUserData*)ImGui::GetIO().UserData;
     const float dp = ioUserData->dpiScale;
+    if (ioUserData->activeActivity == "")
+        Open();
     if (ioUserData->activeActivity != "OpenFileActivity")
         return;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });

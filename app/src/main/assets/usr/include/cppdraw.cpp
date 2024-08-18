@@ -7,15 +7,11 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+DrawCmd cmd;
 clr color_;
 float thickness_;
 //std::string fontName_;
 float fontSize_;
-float time_;
-int touchDown_;
-vec2 touchPos_;
-vec2 screenSize_;
-
 std::vector<Shape> shapes_;
 std::vector<char> strBuffer_;
 
@@ -30,22 +26,44 @@ clr RGB(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 
 float time()
 {
-    return time_;
+    return cmd.time;
+}
+
+float timeDelta()
+{
+    return cmd.timeDelta;
+}
+
+DateTime dateTime()
+{
+    return cmd.dateTime;
 }
 
 vec2 screenSize()
 {
-    return screenSize_;
+    return cmd.screenSize;
 }
 
-bool touchDown()
+bool mouseDown()
 {
-    return touchDown_;
+    return cmd.mouseDown;
 }
 
-vec2 touchPos()
+vec2 mousePos()
 {
-    return touchPos_;
+    return cmd.mousePos;
+}
+
+vec2 mouseDelta()
+{
+    return cmd.mouseDelta;
+}
+
+bool keyDown(int key)
+{
+    if (key < 0 || key >= std::size(cmd.keys))
+        return false;
+    return cmd.keys[key];
 }
 
 void color(clr c)
@@ -56,6 +74,11 @@ void color(clr c)
 void thickness(float th)
 {
     thickness_ = th;
+}
+
+void font(ZStringView name, float fontSize)
+{
+    fontSize_ = fontSize;
 }
 
 void line(float x1, float y1, float x2, float y2)
@@ -106,6 +129,12 @@ void fillTriangle(float x1, float y1, float x2, float y2, float x3, float y3)
     shapes_.push_back(sh);
 }
 
+void fillQuad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4)
+{
+    fillTriangle(x1, y1, x2, y2, x3, y3);
+    fillTriangle(x3, y3, x4, y4, x1, y1);
+}
+
 void circle(float x1, float y1, float r)
 {
     Shape sh(Shape::Circle);
@@ -114,6 +143,16 @@ void circle(float x1, float y1, float r)
     sh.c.r = r;
     sh.c.color = color_;
     sh.c.thick = thickness_;
+    shapes_.push_back(sh);
+}
+
+void fillCircle(float x1, float y1, float r)
+{
+    Shape sh(Shape::FillCircle);
+    sh.c.x1 = x1;
+    sh.c.y1 = y1;
+    sh.c.r = r;
+    sh.c.color = color_;
     shapes_.push_back(sh);
 }
 
@@ -179,11 +218,7 @@ int main()
             fflush(vole);
             break;
         }
-        const DrawCmd* dcmd = (const DrawCmd*)buffer;
-        screenSize_ = dcmd->screenSize;
-        time_ = dcmd->time;
-        touchDown_ = dcmd->touchDown;
-        touchPos_ = dcmd->touchPos;
+        cmd = *(const DrawCmd*)buffer;
         color_ = 0xffffffff;
         thickness_ = 3.f;
         //fontName_ = "";

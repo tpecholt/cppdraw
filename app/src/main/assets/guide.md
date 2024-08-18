@@ -18,15 +18,26 @@ struct *vec2* {
    float x, y; 
 };
 
+struct *DateTime* {
+   int h, m, s;
+   int day, month, year; 
+};
+
 ### Functions - Rendering
 
 void *circle*(float x, float y, float radius);
 
 void *color*(clr c);
 
+void *fillCircle*(float x, float y, float radius);
+
+void *fillQuad*(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
+
 void *fillRect*(float x, float y, float w, float h);
 
 void *fillTriangle*(float x1, float y1, float x2, float y2, float x3, float y3);
+
+void *font*(StringView fontName, float fontSize);
 
 void *line*(float x1, float y1, float x2, float y2);
 
@@ -36,16 +47,20 @@ vec2 *screenSize*();
 
 void *text*(float x, float y, StringView str);
 
-vec2 *textExtents*(StringView str);
-
-void *textStyle*(StringView fontName, float size);
-
 void *thickness*(float thick);
 
 ### Functions - User Interaction
 
 float *time*();
 
-bool *touchDown*();
+float *timeDelta*();
 
-vec2 *touchPos*();
+DateTime *dateTime*();
+
+bool *mouseDown*();
+
+vec2 *mousePos*();
+
+vc2 *mouseDelta*();
+
+bool *keyDown*(int);

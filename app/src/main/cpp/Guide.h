@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #pragma once
@@ -17,14 +17,14 @@ public:
 private:
     /// @begin impl
     void Init();
+
+    void OnGuide(const ImRad::CustomWidgetArgs& args);
+
     ImGuiID ID = 0;
     ImRad::ModalResult modalResult;
     ImRad::Animator animator;
     ImVec2 animPos;
     std::function<void(ImRad::ModalResult)> callback;
-
-    void OnGuide(const ImRad::CustomWidgetArgs& args);
-
     std::string content;
     /// @end impl
 };

@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #pragma once
@@ -9,7 +9,6 @@ class OpenFileActivity
 public:
     /// @begin interface
     void Open();
-
     void Draw();
 
     struct FileInfo {
@@ -18,6 +17,7 @@ public:
         std::string size;
         std::string modified;
     };
+
     std::vector<FileInfo> files;
     int r = 0;
     /// @end interface

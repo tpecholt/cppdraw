@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #include "Guide.h"
@@ -59,7 +59,8 @@ void Guide::Draw()
             ClosePopup();
         if (ImGui::IsKeyPressed(ImGuiKey_AppBack))
             ClosePopup();
-        ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
+        if (ioUserData->activeActivity != "")
+            ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
         ImRad::RenderFilledWindowCorners(ImDrawFlags_RoundCornersBottom);
         if (modalResult != ImRad::None && animator.IsDone())
         {

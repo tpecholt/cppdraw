@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #include "MainActivity.h"
@@ -48,20 +48,20 @@ void MainActivity::Init()
         content.pop_back();
     textEdit.SetText(content);
 
-    int c = (int)TextEditor::PaletteIndex::Cursor;
+    using P = TextEditor::PaletteIndex;
     lightPalette = TextEditor::GetLightPalette();
-    lightPalette[(int) TextEditor::PaletteIndex::CurrentLineFill] = 0x00000000;
-    lightPalette[c] = TextEditor::GetRetroBluePalette()[c];
-    lightPalette[(int) TextEditor::PaletteIndex::LineNumber] &= 0x7fffffff;
-    lightPalette[(int)TextEditor::PaletteIndex::CurrentLineEdge] = 0xffe0e0e0;
+    lightPalette[(int) P::CurrentLineFill] = 0x00000000;
+    lightPalette[(int) P::Cursor] = TextEditor::GetRetroBluePalette()[(int) P::Cursor];
+    lightPalette[(int) P::LineNumber] &= 0x7fffffff;
+    lightPalette[(int) P::CurrentLineEdge] = 0xffe0e0e0;
 
     darkPalette = TextEditor::GetDarkPalette();
-    darkPalette[c] = TextEditor::GetRetroBluePalette()[c];
-    darkPalette[(int) TextEditor::PaletteIndex::LineNumber] &= 0x7fffffff;
+    darkPalette[(int) P::Cursor] = TextEditor::GetRetroBluePalette()[(int) P::Cursor];
+    darkPalette[(int) P::LineNumber] &= 0x7fffffff;
+    darkPalette[(int) P::Number] = TextEditor::GetLightPalette()[(int) P::Number];
 
     retroPalette = TextEditor::GetRetroBluePalette();
-    retroPalette[c] = TextEditor::GetRetroBluePalette()[c];
-    retroPalette[(int) TextEditor::PaletteIndex::LineNumber] &= 0x8fffffff;
+    retroPalette[(int) P::LineNumber] &= 0x8fffffff;
 }
 
 void MainActivity::Draw()
@@ -151,6 +151,16 @@ void MainActivity::Draw()
             /// @end MenuIt
 
             /// @begin MenuIt
+            if (ImGui::MenuItem("Increase Font Size", "", false))
+                OnIncreaseSize();
+            /// @end MenuIt
+
+            /// @begin MenuIt
+            if (ImGui::MenuItem("Decrease Font Size", "", false))
+                OnDecreaseSize();
+            /// @end MenuIt
+
+            /// @begin MenuIt
             ImGui::Separator();
             if (ImGui::MenuItem("Copy All", "", false))
                 OnCopyAll();
@@ -171,56 +181,51 @@ void MainActivity::Draw()
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 5*dp, -1*dp });
             /// @separator
 
-            /// @begin Table
-            if (ImGui::BeginTable("table2", 2, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX, { -1, 0 }))
+            /// @begin Text
+            hb21.BeginLayout();
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextUnformatted(ImRad::Format(" {}", fileName).c_str());
+            hb21.AddSize(0, ImRad::HBox::ItemSize);
+            /// @end Text
+
+            /// @begin Spacer
+            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+            ImRad::Dummy({ hb21.GetSize(), 0 });
+            hb21.AddSize(1, ImRad::HBox::Stretch);
+            /// @end Spacer
+
+            /// @begin Button
+            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            if (ImGui::Button("\xee\x83\xb0", { 35*dp, -1 }))
             {
-                ImGui::TableSetupColumn("left-content", ImGuiTableColumnFlags_WidthStretch, 0);
-                ImGui::TableSetupColumn("right-content", ImGuiTableColumnFlags_WidthFixed, 0*dp);
-                ImGui::TableNextRow(0, 0);
-                ImGui::TableSetColumnIndex(0);
-                /// @separator
-
-                /// @begin Text
-                ImGui::AlignTextToFramePadding();
-                ImGui::TextUnformatted(ImRad::Format(" {}", fileName).c_str());
-                /// @end Text
-
-                /// @begin Button
-                ImRad::TableNextColumn(1);
-                ImRad::Spacing(1);
-                ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-                if (ImGui::Button("\xee\x83\xb0", { 35*dp, -1 }))
-                {
-                    OnHelp();
-                }
-                ImGui::PopStyleColor();
-                /// @end Button
-
-                /// @begin Button
-                ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-                if (ImGui::Button("\xee\x8b\x88", { 35*dp, -1 }))
-                {
-                    ImRad::OpenWindowPopup("FileMenu");
-                }
-                ImGui::PopStyleColor();
-                /// @end Button
-
-                /// @begin Button
-                ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-                if (ImGui::Button("\xee\x97\x94", { 30*dp, -1 }))
-                {
-                    ImRad::OpenWindowPopup("EditMenu");
-                }
-                ImGui::PopStyleColor();
-                /// @end Button
-
-
-                /// @separator
-                ImGui::EndTable();
+                OnHelp();
             }
-            /// @end Table
+            hb21.AddSize(1, 35*dp);
+            ImGui::PopStyleColor();
+            /// @end Button
+
+            /// @begin Button
+            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            if (ImGui::Button("\xee\x8b\x88", { 35*dp, -1 }))
+            {
+                ImRad::OpenWindowPopup("FileMenu");
+            }
+            hb21.AddSize(1, 35*dp);
+            ImGui::PopStyleColor();
+            /// @end Button
+
+            /// @begin Button
+            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            if (ImGui::Button("\xee\x97\x94", { 30*dp, -1 }))
+            {
+                ImRad::OpenWindowPopup("EditMenu");
+            }
+            hb21.AddSize(1, 30*dp);
+            ImGui::PopStyleColor();
+            /// @end Button
 
             /// @separator
             ImGui::PopStyleVar();
@@ -241,7 +246,7 @@ void MainActivity::Draw()
         {
             //visible
             ImGui::PushStyleColor(ImGuiCol_ChildBg, 0xff663300);
-            ImGui::BeginChild("child3", { -1, 40*dp }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoSavedSettings);
+            ImGui::BeginChild("child2", { -1, 40*dp }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoSavedSettings);
             {
                 ImRad::ScrollWhenDragging(false);
                 /// @separator
@@ -358,27 +363,55 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
     if (fileName == "")
         return;
 
+    float dp = ((ImRad::IOUserData *) ImGui::GetIO().UserData)->dpiScale;
+
+    //render line numbers ourselves
+    const TextEditor::Palette& palette = lightMode ? lightPalette : darkMode ? darkPalette : retroPalette;
+    float charAdvanceY = ImGui::GetTextLineHeightWithSpacing(); /** mLineSpacing*/;
+    auto lineNo = (int)floor(teScrollY / charAdvanceY);
+    auto lineMax = std::max(0, std::min((int)textEdit.GetTotalLines() - 1, lineNo + (int)floor((teScrollY + teContentSizeY) / charAdvanceY)));
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, palette[(int)TextEditor::PaletteIndex::CurrentLineEdge]);
+    ImGui::SetNextWindowScroll({ 0, teScrollY });
+    float sizeX = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.f, "999").x + 2*dp;
+    if (ImGui::BeginChild("lineNums", { sizeX, args.size.y }, 0, ImGuiWindowFlags_NoScrollbar))
+    {
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        ImGui::PushStyleColor(ImGuiCol_Text, palette[(int)TextEditor::PaletteIndex::LineNumber]);
+        for (; lineNo <= lineMax; ++lineNo)
+        {
+            std::string str = std::to_string(lineNo + 1);
+            ImVec2 ts = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.f, str.c_str());
+            ImGui::GetWindowDrawList()->AddText({ pos.x + ImGui::GetWindowSize().x - ts.x - dp, pos.y + lineNo * charAdvanceY },
+                                                textEdit.GetPalette()[(int)TextEditor::PaletteIndex::LineNumber],
+                                                str.c_str());
+        }
+        ImGui::Dummy({ 1, textEdit.GetTotalLines() * charAdvanceY });
+        ImGui::PopStyleColor();
+    }
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+    ImGui::SameLine(0, 0);
+
     //need to keep it focused even when button is down (not pressed yet)
     if (setEditorFocus) {
         setEditorFocus = false;
         ImGui::SetNextWindowFocus();
     }
-
-    float dp = ((ImRad::IOUserData *) ImGui::GetIO().UserData)->dpiScale;
     textEdit.SetImGuiChildIgnored(true);
     textEdit.SetLanguageDefinition(TextEditor::LanguageDefinition::CPlusPlus());
     textEdit.SetShowWhitespaces(false);
-    textEdit.SetPalette(lightMode ? lightPalette :
-                        darkMode ? darkPalette :
-                        retroPalette);
-
+    textEdit.SetShowLineNumbers(false);
+    textEdit.SetPalette(palette);
     ImRad::PushInvisibleScrollbar();
     ImGui::PushStyleColor(ImGuiCol_ChildBg, textEdit.GetPalette()[(int)TextEditor::PaletteIndex::Background]);
-    if (ImGui::BeginChild("textEdit", args.size))
+    if (ImGui::BeginChild("textEdit", { -1, args.size.y }))
     {
         ImRad::ScrollWhenDragging(true);
 
         textEdit.Render("textEdit", args.size);
+        teScrollY = ImGui::GetScrollY();
+        teContentSizeY = ImGui::GetWindowContentRegionMax().y;
 
         //leave right margin so it's possible to click cursor after the last character on line
         ImGui::GetCurrentWindow()->ContentSize.x += 10 * dp;
@@ -452,14 +485,14 @@ void MainActivity::OnRun()
 
 void MainActivity::OnFileNew()
 {
-    inputQuery.EnterFileName("New file name:", [this](const std::string& fn) {
+    inputQuery.EnterFileName("New file name", [this](const std::string& fn) {
         NewFile(fn);
     });
 }
 
 void MainActivity::OnFileSaveAs()
 {
-    inputQuery.EnterFileName("New file name:", [this](const std::string& fn) {
+    inputQuery.EnterFileName("New file name", [this](const std::string& fn) {
         SaveFile(fn);
     });
 }
@@ -508,6 +541,14 @@ void MainActivity::OnRetroMode()
     lightMode = darkMode = false;
 }
 
+void MainActivity::OnIncreaseSize()
+{
+}
+
+void MainActivity::OnDecreaseSize()
+{
+}
+
 void MainActivity::OnHelp()
 {
     guide.OpenPopup();
@@ -523,7 +564,7 @@ void MainActivity::NewFile(const std::string& fname)
     const char* SRC_TEMPLATE =
             "#include \"cppdraw.h\"\n\n"
             "void draw()\n{\n"
-            "\tcolor(touchDown() ? 0xff0000ff : 0xff00ff00);\n"
+            "\tcolor(mouseDown() ? 0xff0000ff : 0xff00ff00);\n"
             "\tfillRect(100, 100, 300, 200);\n"
             "}\n";
     textEdit.SetText(SRC_TEMPLATE);
@@ -552,3 +593,8 @@ void MainActivity::GoTo(int line, int column)
         textEdit.SetCursorPosition({ line - 1, column - 1 });
 }
 
+void MainActivity::ResetLayout()
+{
+    // ImGui::GetCurrentWindow()->HiddenFramesCannotSkipItems = 2;
+    hb21.Reset();
+}

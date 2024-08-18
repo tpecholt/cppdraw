@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #pragma once
@@ -10,7 +10,6 @@ class MainActivity
 public:
     /// @begin interface
     void Open();
-
     void Draw();
 
     std::string fileName;
@@ -25,6 +24,7 @@ public:
 
 private:
     /// @begin impl
+    void ResetLayout();
     void Init();
 
     void OnEditor(const ImRad::CustomWidgetArgs& args);
@@ -40,14 +40,19 @@ private:
     void OnHelp();
     void OnLightMode();
     void OnCopyAll();
+    void OnIncreaseSize();
+    void OnDecreaseSize();
+
+    ImRad::HBox hb21;
+    /// @end impl
 
     bool setEditorFocus;
     TextEditor textEdit;
+    float teScrollY = 0;
+    float teContentSizeY = 0;
     TextEditor::Palette lightPalette;
     TextEditor::Palette darkPalette;
     TextEditor::Palette retroPalette;
-    /// @end impl
-
     bool startProgram = false;
 };
 

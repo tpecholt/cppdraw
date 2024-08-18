@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #include "MessageBox.h"
@@ -26,6 +26,7 @@ void MessageBox::ClosePopup(ImRad::ModalResult mr)
 void MessageBox::Init()
 {
     // TODO: Add your code here
+    ResetLayout();
 }
 
 void MessageBox::Draw()
@@ -39,12 +40,14 @@ void MessageBox::Draw()
     ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xff323432);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 10*dp, 10*dp });
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 10*dp, 5*dp });
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5*dp);
     ImGui::SetNextWindowPos(ioUserData->WorkRect().GetCenter(), 0, { 0.5f, 0.5f }); //Center
     ImGui::SetNextWindowSize({ 0, 0 }); //{ 640*dp, 480*dp }
     bool tmpOpen = true;
     if (ImGui::BeginPopupModal("title###MessageBox", &tmpOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
+        if (ioUserData->activeActivity != "")
+            ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
         if (modalResult != ImRad::None)
         {
             ImGui::CloseCurrentPopup();
@@ -55,99 +58,117 @@ void MessageBox::Draw()
 
         // TODO: Add Draw calls of dependent popup windows here
 
-        /// @begin Table
-        if (ImGui::BeginTable("table1", 3, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX, { -1, 0 }))
+        /// @begin Spacer
+        hb1.BeginLayout();
+        ImRad::Dummy({ hb1.GetSize(), 0 });
+        hb1.AddSize(0, ImRad::HBox::Stretch);
+        /// @end Spacer
+
+        /// @begin Text
+        ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+        ImGui::TextUnformatted(ImRad::Format("{}", message).c_str());
+        hb1.AddSize(1, ImRad::HBox::ItemSize);
+        /// @end Text
+
+        /// @begin Spacer
+        ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+        ImRad::Dummy({ hb1.GetSize(), 0 });
+        hb1.AddSize(1, ImRad::HBox::Stretch);
+        /// @end Spacer
+
+        /// @begin Spacer
+        ImRad::Spacing(4);
+        hb2.BeginLayout();
+        ImRad::Dummy({ hb2.GetSize(), 0 });
+        hb2.AddSize(0, ImRad::HBox::Stretch);
+        /// @end Spacer
+
+        /// @begin Button
+        if (buttons&ImRad::Ok)
         {
-            ImGui::TableSetupColumn("left-stretch", ImGuiTableColumnFlags_WidthStretch, 0);
-            ImGui::TableSetupColumn("content", ImGuiTableColumnFlags_WidthFixed, 0*dp);
-            ImGui::TableSetupColumn("right-stretch", ImGuiTableColumnFlags_WidthStretch, 0);
-            ImGui::TableNextRow(0, 0);
-            ImGui::TableSetColumnIndex(0);
-            /// @separator
-
-//TODO: Add Draw calls of dependent popup windows here
-            /// @begin Text
-            ImRad::TableNextColumn(1);
-            ImGui::TextUnformatted(ImRad::Format("{}", message).c_str());
-            /// @end Text
-
-
-            /// @separator
-            ImGui::EndTable();
+            //visible
+            ImGui::SameLine(0, 0 * ImGui::GetStyle().ItemSpacing.x);
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10*dp);
+            if (ImGui::Button("OK", { 80*dp, 30*dp }))
+            {
+                ClosePopup(ImRad::Ok);
+            }
+            hb2.AddSize(0, 80*dp);
+            ImGui::PopStyleVar();
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor();
         }
-        /// @end Table
+        /// @end Button
 
-        /// @begin Table
-        ImRad::Spacing(2);
-        if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX, { -1, 0 }))
+        /// @begin Button
+        if (buttons&ImRad::Yes)
         {
-            ImGui::TableSetupColumn("left-stretch", ImGuiTableColumnFlags_WidthStretch, 0);
-            ImGui::TableSetupColumn("content", ImGuiTableColumnFlags_WidthFixed, 0*dp);
-            ImGui::TableSetupColumn("right-stretch", ImGuiTableColumnFlags_WidthStretch, 0);
-            ImGui::TableNextRow(0, 0);
-            ImGui::TableSetColumnIndex(0);
-            /// @separator
-
-            /// @begin Button
-            ImRad::TableNextColumn(1);
-            if (buttons&ImRad::Ok)
+            //visible
+            ImGui::SameLine(0, 0 * ImGui::GetStyle().ItemSpacing.x);
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10*dp);
+            if (ImGui::Button("Yes", { 80*dp, 30*dp }))
             {
-                //visible
-                if (ImGui::Button("OK", { 100*dp, 30*dp }))
-                {
-                    ClosePopup(ImRad::Ok);
-                }
+                ClosePopup(ImRad::Yes);
             }
-            /// @end Button
-
-            /// @begin Button
-            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-            if (buttons&ImRad::Cancel)
-            {
-                //visible
-                if (ImGui::Button("Cancel", { 100*dp, 30*dp }) ||
-                    (!ImRad::IsItemDisabled() && ImGui::IsKeyPressed(ImGuiKey_Escape, false)))
-                {
-                    ClosePopup(ImRad::Cancel);
-                }
-            }
-            /// @end Button
-
-            /// @begin Button
-            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-            if (buttons&ImRad::Yes)
-            {
-                //visible
-                if (ImGui::Button("Yes", { 100*dp, 30*dp }))
-                {
-                    ClosePopup(ImRad::Yes);
-                }
-            }
-            /// @end Button
-
-            /// @begin Button
-            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-            if (buttons&ImRad::No)
-            {
-                //visible
-                if (ImGui::Button("No", { 100*dp, 30*dp }))
-                {
-                    ClosePopup(ImRad::No);
-                }
-            }
-            /// @end Button
-
-
-            /// @separator
-            ImGui::EndTable();
+            hb2.AddSize(0, 80*dp);
+            ImGui::PopStyleVar();
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor();
         }
-        /// @end Table
+        /// @end Button
+
+        /// @begin Button
+        if (buttons&ImRad::No)
+        {
+            //visible
+            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10*dp);
+            if (ImGui::Button("No", { 80*dp, 30*dp }))
+            {
+                ClosePopup(ImRad::No);
+            }
+            hb2.AddSize(1, 80*dp);
+            ImGui::PopStyleVar();
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor();
+        }
+        /// @end Button
+
+        /// @begin Button
+        ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+        ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10*dp);
+        if (ImGui::Button("Cancel", { 80*dp, 30*dp }) ||
+            ImGui::Shortcut(ImGuiKey_Escape))
+        {
+            ClosePopup(ImRad::Cancel);
+        }
+        hb2.AddSize(1, 80*dp);
+        ImGui::PopStyleVar();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
+        /// @end Button
 
         /// @separator
         ImGui::EndPopup();
     }
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     /// @end TopWindow
+}
+
+void MessageBox::ResetLayout()
+{
+    // ImGui::GetCurrentWindow()->HiddenFramesCannotSkipItems = 2;
+    hb1.Reset();
+    hb2.Reset();
 }

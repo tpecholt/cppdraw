@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #include "BuildOutput.h"
@@ -89,7 +89,6 @@ void BuildOutput::Draw()
                 ImGui::PushID(i);
                 ImGui::TableNextRow(0, 40*dp);
                 ImGui::TableSetColumnIndex(0);
-                OnBeginRow();
                 /// @separator
 
                 /// @begin Text
@@ -100,7 +99,7 @@ void BuildOutput::Draw()
 
                 /// @begin Text
                 ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-                ImGui::PushStyleColor(ImGuiCol_Text, output[i].kind==2?0xff4040ff:output[i].kind==1?0xff4080ff:0xffc2c2c2);
+                ImGui::PushStyleColor(ImGuiCol_Text, output[i].kind==2?0xff6060ff:output[i].kind==1?0xff4080ff:0xffc2c2c2);
                 ImGui::PushTextWrapPos(0);
                 ImGui::TextUnformatted(ImRad::Format("{}", output[i].text).c_str());
                 ImGui::PopTextWrapPos();
@@ -128,6 +127,8 @@ void BuildOutput::Draw()
     ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     /// @end TopWindow
+        sel = newSel;
+        
         sel = newSel;
         
         sel = newSel;

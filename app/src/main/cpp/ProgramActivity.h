@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #pragma once
@@ -9,7 +9,6 @@ class ProgramActivity
 public:
     /// @begin interface
     void Open();
-
     void Draw();
 
     /// @end interface
@@ -27,6 +26,8 @@ private:
     int sockfd = 0;
     std::string error;
     float timeStart;
+    float lastTime;
+    ImVec2 lastMousePos;
     std::vector<char> strBuf, buf;
 };
 

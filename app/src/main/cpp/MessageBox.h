@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #pragma once
@@ -19,12 +19,14 @@ public:
 
 private:
     /// @begin impl
+    void ResetLayout();
     void Init();
+
     ImGuiID ID = 0;
     ImRad::ModalResult modalResult;
     std::function<void(ImRad::ModalResult)> callback;
-
-
+    ImRad::HBox hb1;
+    ImRad::HBox hb2;
     /// @end impl
 };
 

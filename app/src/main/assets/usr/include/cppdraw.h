@@ -1,7 +1,8 @@
 #pragma once
 //#include <string_view> //todo: provide lightweight version to speed up compile time
 #include <stddef.h>
-#include <string.h>
+#include <cstring>
+#include <cmath>
 
 const int CPPDRAW_PORT = 5551;
 
@@ -10,7 +11,7 @@ struct ZStringView {
         : str_(), size_()
     {}
     ZStringView(const char* s)
-        : str_(s), size_(strlen(s))
+        : str_(s), size_(std::strlen(s))
     {}
     template <class T>
     ZStringView(const T& s)
@@ -30,13 +31,38 @@ using clr = unsigned;
 
 struct vec2 {
     float x, y;
+
+    vec2() : x(), y() {}
+    vec2(float x, float y) : x(x), y(y) {}
+    vec2(const vec2& v) : x(v.x), y(v.y) {}
+    vec2 operator+ (vec2 v) const { return { x+v.x, y+v.y }; }
+    vec2 operator- (vec2 v) const { return { x-v.x, y-v.y }; }
+    vec2 operator* (float f) const { return { f*x, f*y }; }
+    friend vec2 operator* (float f, vec2 v) { return v*f; }
+    vec2 operator/ (float f) const { return { x/f, y/f }; }
+    vec2& operator+= (vec2 v) { *this = *this + v; return *this; }
+    vec2& operator-= (vec2 v) { *this = *this - v; return *this; }
+    vec2& operator*= (float f) { *this = *this * f; return *this; }
+    vec2& operator/= (float f) { *this = *this / f; return *this; }
+    friend float dot(vec2 a, vec2 b) { return a.x * b.x + a.y * b.y; }
+    friend float norm(vec2 a) { return std::sqrt(dot(a, a)); }
+    friend float cross(vec2 a, vec2 b) { return a.x*b.y - a.y*b.x; }
+};
+
+struct DateTime {
+    int h, m, s;
+    int day, month, year;
 };
 
 struct DrawCmd {
     vec2 screenSize;
-    int touchDown;
-    vec2 touchPos;
+    int mouseDown;
+    vec2 mousePos;
+    vec2 mouseDelta;
     float time;
+    float timeDelta;
+    DateTime dateTime;
+    bool keys[64];
 };
 
 struct LineShape {
@@ -67,7 +93,7 @@ struct TextShape {
 };
 
 struct Shape {
-    enum Kind { Line, Rect, FillRect, FillTriangle, Circle, Text };
+    enum Kind { Line, Rect, FillRect, FillTriangle, Circle, FillCircle, Text };
     Kind kind;
     union {
         LineShape l;
@@ -85,19 +111,25 @@ clr RGB(unsigned char r, unsigned char g, unsigned char b, unsigned char a=255);
 
 void color(clr c);
 
+void font(ZStringView name, float fontSize);
+
 void thickness(float th);
 
 void line(float x1, float y1, float x2, float y2);
 
 void rectangle(float x1, float y1, float w, float h);
 
+void circle(float x1, float y1, float r);
+
+void text(float x, float y, ZStringView text);
+
 void fillRect(float x1, float y1, float w, float h);
 
 void fillTriangle(float x1, float y1, float x2, float y2, float x3, float y3);
 
-void circle(float x1, float y1, float r);
+void fillQuad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
 
-void text(float x, float y, ZStringView text);
+void fillCircle(float x1, float y1, float r);
 
 vec2 screenSize();
 
@@ -105,9 +137,17 @@ vec2 screenSize();
 
 float time();
 
-bool touchDown();
+float timeDelta();
 
-vec2 touchPos();
+DateTime dateTime();
+
+bool mouseDown();
+
+vec2 mousePos();
+
+vec2 mouseDelta();
+
+bool keyDown(int key);
 
 //
 

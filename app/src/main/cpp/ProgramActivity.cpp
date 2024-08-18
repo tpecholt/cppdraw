@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #include "ProgramActivity.h"
@@ -54,7 +54,7 @@ void ProgramActivity::Connect()
         return;
     }
     error = "";
-    timeStart = ImGui::GetTime();
+    timeStart = lastTime = ImGui::GetTime();
 }
 
 void ProgramActivity::Draw()
@@ -106,10 +106,18 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
         return;
 
     DrawCmd dcmd;
-    dcmd.screenSize = { ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y };
+    const auto* ioUserData = (ImRad::IOUserData*)ImGui::GetIO().UserData;
+    dcmd.screenSize = { ioUserData->WorkRect().GetSize().x, ioUserData->WorkRect().GetSize().y };
     dcmd.time = ImGui::GetTime() - timeStart;
-    dcmd.touchDown = ImGui::IsMouseDown(0);
-    dcmd.touchPos = { ImGui::GetMousePos().x, ImGui::GetMousePos().y };
+    dcmd.timeDelta = ImGui::GetTime() - lastTime;
+    lastTime = ImGui::GetTime();
+    time_t tt = time(0);
+    tm* now = localtime(&tt);
+    dcmd.dateTime = { now->tm_hour, now->tm_min, now->tm_sec, now->tm_mday, now->tm_mon, now->tm_year };
+    dcmd.mouseDown = ImGui::IsMouseDown(0);
+    dcmd.mousePos = { ImGui::GetMousePos().x, ImGui::GetMousePos().y };
+    dcmd.mouseDelta = dcmd.mousePos - vec2(lastMousePos.x, lastMousePos.y);
+    lastMousePos = ImGui::GetMousePos();
     int n = write(sockfd, &dcmd, sizeof(DrawCmd));
     if (n != sizeof(DrawCmd))
         return;
@@ -160,19 +168,22 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
                     dl->AddLine({ sh.l.x1, sh.l.y1 }, { sh.l.x2, sh.l.y2 }, sh.l.color, sh.l.thick);
                     break;
                 case Shape::Rect:
-                    dl->AddRect({ sh.r.x1, sh.r.y1 }, { sh.r.x1+sh.r.w, sh.r.y1+sh.r.h }, sh.l.color, 0, 0, sh.l.thick);
+                    dl->AddRect({ sh.r.x1, sh.r.y1 }, { sh.r.x1+sh.r.w, sh.r.y1+sh.r.h }, sh.r.color, 0, 0, sh.r.thick);
                     break;
                 case Shape::FillRect:
-                    dl->AddRectFilled({ sh.r.x1, sh.r.y1 }, { sh.r.x1+sh.r.w, sh.r.y1+sh.r.h }, sh.l.color);
+                    dl->AddRectFilled({ sh.r.x1, sh.r.y1 }, { sh.r.x1+sh.r.w, sh.r.y1+sh.r.h }, sh.r.color);
                     break;
                 case Shape::Circle:
-                    dl->AddCircle({ sh.c.x1, sh.c.y1 }, sh.c.r, sh.l.color, 0, sh.l.thick);
+                    dl->AddCircle({ sh.c.x1, sh.c.y1 }, sh.c.r, sh.c.color, 0, sh.c.thick);
+                    break;
+                case Shape::FillCircle:
+                    dl->AddCircleFilled({ sh.c.x1, sh.c.y1 }, sh.c.r, sh.c.color, 0);
                     break;
                 case Shape::FillTriangle:
                     dl->AddTriangleFilled({ sh.t.x1, sh.t.y1 }, { sh.t.x2, sh.t.y2 }, { sh.t.x3, sh.t.y3 }, sh.t.color);
                     break;
                 case Shape::Text:
-                    dl->AddText({ sh.x.x1, sh.x.y1 }, sh.x.color, strBuf.data() + sh.x.text);
+                    dl->AddText(nullptr, sh.x.size * ioUserData->dpiScale, { sh.x.x1, sh.x.y1 }, sh.x.color, strBuf.data() + sh.x.text);
                     break;
             }
         }

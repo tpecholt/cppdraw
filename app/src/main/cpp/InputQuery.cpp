@@ -1,4 +1,4 @@
-// Generated with ImRAD 0.7
+// Generated with ImRAD 0.8
 // visit https://github.com/tpecholt/imrad
 
 #include "InputQuery.h"
@@ -46,7 +46,8 @@ void InputQuery::Draw()
     bool tmpOpen = true;
     if (ImGui::BeginPopupModal("title###InputQuery", &tmpOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
+        if (ioUserData->activeActivity != "")
+            ImRad::RenderDimmedBackground(ioUserData->WorkRect(), ioUserData->dimBgRatio);
         ImRad::RenderFilledWindowCorners(ImDrawFlags_RoundCornersTop);
         if (modalResult != ImRad::None)
         {
@@ -65,52 +66,57 @@ void InputQuery::Draw()
 
         /// @begin Input
         ImRad::Spacing(1);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, 0x00ffffff);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
         if (ImGui::IsWindowAppearing())
             ImGui::SetKeyboardFocusHere();
         ImGui::SetNextItemWidth(-1);
         ImGui::InputText("##value", &value, ImGuiInputTextFlags_None);
         if (ImGui::IsItemActive())
             ioUserData->imeType = ImRad::ImeText;
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
         /// @end Input
 
-        /// @begin Table
+        /// @begin Spacer
         ImRad::Spacing(2);
-        if (ImGui::BeginTable("table1", 2, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX, { -1, 0 }))
+        hb3.BeginLayout();
+        ImRad::Dummy({ hb3.GetSize(), 0 });
+        hb3.AddSize(0, ImRad::HBox::Stretch);
+        /// @end Spacer
+
+        /// @begin Button
+        ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+        ImGui::BeginDisabled(value.empty());
+        ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10*dp);
+        if (ImGui::Button("OK", { 80*dp, 30*dp }))
         {
-            ImGui::TableSetupColumn("left-stretch", ImGuiTableColumnFlags_WidthStretch, 0);
-            ImGui::TableSetupColumn("content", ImGuiTableColumnFlags_WidthFixed, 0*dp);
-            ImGui::TableNextRow(0, 0);
-            ImGui::TableSetColumnIndex(0);
-            /// @separator
-
-            /// @begin Button
-            ImRad::TableNextColumn(1);
-            ImGui::BeginDisabled(value.empty());
-            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-            if (ImGui::Button("OK", { 60*dp, 30*dp }))
-            {
-                ClosePopup(ImRad::Ok);
-            }
-            ImGui::PopStyleColor();
-            ImGui::EndDisabled();
-            /// @end Button
-
-            /// @begin Button
-            ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
-            ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-            if (ImGui::Button("Cancel", { 60*dp, 30*dp }) ||
-                (!ImRad::IsItemDisabled() && ImGui::IsKeyPressed(ImGuiKey_Escape, false)))
-            {
-                ClosePopup(ImRad::Cancel);
-            }
-            ImGui::PopStyleColor();
-            /// @end Button
-
-
-            /// @separator
-            ImGui::EndTable();
+            ClosePopup(ImRad::Ok);
         }
-        /// @end Table
+        hb3.AddSize(1, 80*dp);
+        ImGui::PopStyleVar();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
+        ImGui::EndDisabled();
+        /// @end Button
+
+        /// @begin Button
+        ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
+        ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10*dp);
+        if (ImGui::Button("Cancel", { 80*dp, 30*dp }) ||
+            ImGui::Shortcut(ImGuiKey_Escape))
+        {
+            ClosePopup(ImRad::Cancel);
+        }
+        hb3.AddSize(1, 80*dp);
+        ImGui::PopStyleVar();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
+        /// @end Button
 
         /// @separator
         ImGui::EndPopup();
@@ -141,4 +147,10 @@ void InputQuery::EnterFileName(const std::string& l, std::function<void(const st
             clb(fn);
         }
     });
+}
+
+void InputQuery::ResetLayout()
+{
+    // ImGui::GetCurrentWindow()->HiddenFramesCannotSkipItems = 2;
+    hb3.Reset();
 }

@@ -1,7 +1,7 @@
 #include "imrad.h"
 #include "imgui/imgui.h"
-#include "imgui/imgui_impl_android.h"
-#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/backends/imgui_impl_android.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 #include "IconsMaterialDesign.h"
 #include <android/log.h>
 #include <android_native_app_glue.h>
@@ -49,12 +49,13 @@ static void UpdateScreenRect();
 static void InstallClang();
 /*static*/ void ShellExecute(const std::string& cmd, std::function<void(const char*)> clb = {});
 static void SetClipboardText(void*, const char*);
+static const char* GetClipboardText(void*);
 
 //-----------------------------------------------------------------
 
 void Draw()
 {
-	mainActivity.Draw();
+    mainActivity.Draw();
     openFileActivity.Draw();
     programActivity.Draw();
     buildOutput.Draw();
@@ -232,6 +233,7 @@ void Init(struct android_app* app)
         std::error_code ec;
         fs::current_path(app->activity->internalDataPath, ec);
         io.SetClipboardTextFn = SetClipboardText;
+        io.GetClipboardTextFn = GetClipboardText;
 
         std::thread prepareStuff(InstallClang);
         prepareStuff.detach();
@@ -282,15 +284,13 @@ void Init(struct android_app* app)
         strcpy(cfg.Name, "H1");
         font = io.Fonts->AddFontFromMemoryTTF(robotoM_data, robotoM_size,
                                               g_IOUserData.dpiScale * 24.0f, &cfg);
+        cfg.FontDataOwnedByAtlas = false; //clone data, don't attempt to free it 3x
         strcpy(cfg.Name, "H2");
         font = io.Fonts->AddFontFromMemoryTTF(robotoM_data, robotoM_size,
                                               g_IOUserData.dpiScale * 22.0f, &cfg);
         strcpy(cfg.Name, "H3");
         font = io.Fonts->AddFontFromMemoryTTF(robotoM_data, robotoM_size,
                                               g_IOUserData.dpiScale * 20.0f, &cfg);
-
-        //start activity
-        openFileActivity.Open();
     }
 }
 
@@ -331,7 +331,8 @@ void Shutdown()
     g_EglDisplay = EGL_NO_DISPLAY;
     g_EglContext = EGL_NO_CONTEXT;
     g_EglSurface = EGL_NO_SURFACE;
-    ANativeWindow_release(g_App->window);
+    if (g_App->window)
+        ANativeWindow_release(g_App->window);
 
     g_Initialized = false;
 }
@@ -442,6 +443,9 @@ static void GetDisplayInfo()
     jint dpi = bl->CallIntMethod(g_App->activity->clazz, method_id);
     g_NavBarHeight = 48 * dpi / 160.0; //android dp definition
     g_IOUserData.dpiScale = dpi / 140.0; //relative to laptop screen DPI;
+    //round dpiScale otherwise when using box sizers floating point errors in imgui
+    //accumulate end cause the window contentRegionRect to grow continuously
+    g_IOUserData.dpiScale = std::round(1000 * g_IOUserData.dpiScale) / 1000.0;
     ImGui::GetIO().UserData = &g_IOUserData;
 
     method_id = bl->GetMethodID(bl.native_activity_clazz, "getRotation", "()I");
@@ -480,6 +484,18 @@ void SetClipboardText(void*, const char* txt)
     jstring jtxt = bl->NewStringUTF(txt);
     bl->CallVoidMethod(g_App->activity->clazz, method_id, jtxt);
     bl->DeleteLocalRef(jtxt);
+}
+
+const char* GetClipboardText(void*)
+{
+    JniBlock bl;
+    jmethodID method_id = bl->GetMethodID(bl.native_activity_clazz, "getClipboardText", "()Ljava/lang/String;");
+    if (method_id == nullptr)
+        return nullptr;
+    auto rv = (jstring)bl->CallObjectMethod(g_App->activity->clazz, method_id);
+    const char* ret = bl->GetStringUTFChars(rv, 0);
+    bl->ReleaseStringUTFChars(rv, ret);
+    return ret;
 }
 
 void ShellExecute(const std::string& cmd, std::function<void(std::string_view)> clb)
