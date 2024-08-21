@@ -66,8 +66,8 @@ void InputQuery::Draw()
 
         /// @begin Input
         ImRad::Spacing(1);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, 0x00ffffff);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, 0xff505050);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0*dp);
         if (ImGui::IsWindowAppearing())
             ImGui::SetKeyboardFocusHere();
         ImGui::SetNextItemWidth(-1);
@@ -79,18 +79,19 @@ void InputQuery::Draw()
         /// @end Input
 
         /// @begin Spacer
-        ImRad::Spacing(2);
         hb3.BeginLayout();
+        ImRad::Spacing(2);
         ImRad::Dummy({ hb3.GetSize(), 0 });
-        hb3.AddSize(0, ImRad::HBox::Stretch);
+        hb3.AddSize(0, ImRad::HBox::Stretch(1));
         /// @end Spacer
 
         /// @begin Button
         ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
         ImGui::BeginDisabled(value.empty());
-        ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10*dp);
+        ImGui::PushStyleColor(ImGuiCol_Text, 0xff000000);
+        ImGui::PushStyleColor(ImGuiCol_Button, 0xffd2d2d2);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0*dp);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 15*dp);
         if (ImGui::Button("OK", { 80*dp, 30*dp }))
         {
             ClosePopup(ImRad::Ok);
@@ -99,6 +100,7 @@ void InputQuery::Draw()
         ImGui::PopStyleVar();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
+        ImGui::PopStyleColor();
         ImGui::EndDisabled();
         /// @end Button
 
@@ -106,7 +108,7 @@ void InputQuery::Draw()
         ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
         ImGui::PushStyleColor(ImGuiCol_Button, 0x00ffffff);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1*dp);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10*dp);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 15*dp);
         if (ImGui::Button("Cancel", { 80*dp, 30*dp }) ||
             ImGui::Shortcut(ImGuiKey_Escape))
         {

@@ -71,7 +71,7 @@ struct LineShape {
     float thick;
 };
 struct RectShape {
-    float x1, y1, w, h;
+    float x1, y1, x2, y2;
     clr color;
     float thick;
 };
@@ -117,13 +117,13 @@ void thickness(float th);
 
 void line(float x1, float y1, float x2, float y2);
 
-void rectangle(float x1, float y1, float w, float h);
+void rectangle(float x1, float y1, float x2, float y2);
 
 void circle(float x1, float y1, float r);
 
 void text(float x, float y, ZStringView text);
 
-void fillRect(float x1, float y1, float w, float h);
+void fillRect(float x1, float y1, float x2, float y2);
 
 void fillTriangle(float x1, float y1, float x2, float y2, float x3, float y3);
 
@@ -141,7 +141,7 @@ float timeDelta();
 
 DateTime dateTime();
 
-bool mouseDown();
+bool mouseDown(int button = 0);
 
 vec2 mousePos();
 
@@ -150,5 +150,7 @@ vec2 mouseDelta();
 bool keyDown(int key);
 
 //
+
+void newFrame();
 
 extern void draw();

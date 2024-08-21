@@ -15,6 +15,16 @@ float fontSize_;
 std::vector<Shape> shapes_;
 std::vector<char> strBuffer_;
 
+void newFrame()
+{
+    color_ = 0xffffffff;
+    thickness_ = 3.f;
+    //fontName_ = "";
+    fontSize_ = 18;
+    shapes_.clear();
+    strBuffer_.clear();
+}
+
 Shape::Shape(Kind k)
 : kind(k)
 {}
@@ -44,7 +54,7 @@ vec2 screenSize()
     return cmd.screenSize;
 }
 
-bool mouseDown()
+bool mouseDown(int)
 {
     return cmd.mouseDown;
 }
@@ -93,25 +103,25 @@ void line(float x1, float y1, float x2, float y2)
     shapes_.push_back(sh);
 }
 
-void rectangle(float x1, float y1, float w, float h)
+void rectangle(float x1, float y1, float x2, float y2)
 {
     Shape sh(Shape::Rect);
     sh.r.x1 = x1;
     sh.r.y1 = y1;
-    sh.r.w = w;
-    sh.r.h = h;
+    sh.r.x2 = x2;
+    sh.r.y2 = y2;
     sh.r.color = color_;
     sh.r.thick = thickness_;
     shapes_.push_back(sh);
 }
 
-void fillRect(float x1, float y1, float w, float h)
+void fillRect(float x1, float y1, float x2, float y2)
 {
     Shape sh(Shape::FillRect);
     sh.r.x1 = x1;
     sh.r.y1 = y1;
-    sh.r.w = w;
-    sh.r.h = h;
+    sh.r.x2 = x2;
+    sh.r.y2 = y2;
     sh.r.color = color_;
     shapes_.push_back(sh);
 }
@@ -219,13 +229,8 @@ int main()
             break;
         }
         cmd = *(const DrawCmd*)buffer;
-        color_ = 0xffffffff;
-        thickness_ = 3.f;
-        //fontName_ = "";
-        fontSize_ = 18;
-        shapes_.clear();
-        strBuffer_.clear();
 
+        newFrame();
         draw();
 
         uint32_t num = htonl(strBuffer_.size());

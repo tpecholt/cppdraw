@@ -565,4 +565,9 @@ void InstallClang()
         system("chmod 777 usr/bin/lld");
         system("ln -s lld usr/bin/ld.lld");
     }
+
+    //clang needs this
+    putenv("TMPDIR=usr/tmp");
+    __android_log_print(ANDROID_LOG_INFO, g_LogTag, "TMPDIR=%s",
+                        getenv("TMPDIR") ? getenv("TMPDIR") : "not set");
 }

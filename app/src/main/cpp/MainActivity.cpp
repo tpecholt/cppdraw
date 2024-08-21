@@ -191,7 +191,7 @@ void MainActivity::Draw()
             /// @begin Spacer
             ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.x);
             ImRad::Dummy({ hb21.GetSize(), 0 });
-            hb21.AddSize(1, ImRad::HBox::Stretch);
+            hb21.AddSize(1, ImRad::HBox::Stretch(1));
             /// @end Spacer
 
             /// @begin Button
@@ -565,7 +565,7 @@ void MainActivity::NewFile(const std::string& fname)
             "#include \"cppdraw.h\"\n\n"
             "void draw()\n{\n"
             "\tcolor(mouseDown() ? 0xff0000ff : 0xff00ff00);\n"
-            "\tfillRect(100, 100, 300, 200);\n"
+            "\tfillRect(100, 100, 400, 300);\n"
             "}\n";
     textEdit.SetText(SRC_TEMPLATE);
     SaveFile(fname);

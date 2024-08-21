@@ -44,7 +44,7 @@ void OpenFileActivity::Init()
             buf
         });
     }
-    std::sort(files.begin() + 1, files.end(), [](const auto& a, const auto& b) {
+    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
         return a.time > b.time;
     });
 }
@@ -195,7 +195,7 @@ void OpenFileActivity::OnSelect()
 
 void OpenFileActivity::OnNewFile()
 {
-    inputQuery.EnterFileName("New file name:", [](const std::string& fn) {
+    inputQuery.EnterFileName("New file name", [](const std::string& fn) {
         mainActivity.NewFile(fn);
         mainActivity.Open();
     });

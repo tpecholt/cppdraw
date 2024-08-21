@@ -57,10 +57,10 @@ float *timeDelta*();
 
 DateTime *dateTime*();
 
-bool *mouseDown*();
+bool *mouseDown*(int button = 0);
 
 vec2 *mousePos*();
 
 vc2 *mouseDelta*();
 
-bool *keyDown*(int);
+bool *keyDown*(int key);
