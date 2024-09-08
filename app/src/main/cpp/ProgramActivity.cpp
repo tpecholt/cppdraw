@@ -185,6 +185,9 @@ void ProgramActivity::OnDraw(const ImRad::CustomWidgetArgs& args)
                 case Shape::Text:
                     dl->AddText(nullptr, sh.x.size * ioUserData->dpiScale, { sh.x.x1, sh.x.y1 }, sh.x.color, strBuf.data() + sh.x.text);
                     break;
+                case Shape::Sound:
+                    //todo
+                    break;
             }
         }
 

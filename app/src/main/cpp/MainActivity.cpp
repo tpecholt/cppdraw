@@ -365,7 +365,7 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
 
     float dp = ((ImRad::IOUserData *) ImGui::GetIO().UserData)->dpiScale;
 
-    //render line numbers ourselves
+    //render line numbers
     const TextEditor::Palette& palette = lightMode ? lightPalette : darkMode ? darkPalette : retroPalette;
     float charAdvanceY = ImGui::GetTextLineHeightWithSpacing(); /** mLineSpacing*/;
     auto lineNo = (int)floor(teScrollY / charAdvanceY);
@@ -374,7 +374,8 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
     ImGui::PushStyleColor(ImGuiCol_ChildBg, palette[(int)TextEditor::PaletteIndex::CurrentLineEdge]);
     ImGui::SetNextWindowScroll({ 0, teScrollY });
     float sizeX = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.f, "999").x + 2*dp;
-    if (ImGui::BeginChild("lineNums", { sizeX, args.size.y }, 0, ImGuiWindowFlags_NoScrollbar))
+    float sizeY = args.size.y - buildOutput.height;
+    if (ImGui::BeginChild("lineNums", { sizeX, sizeY }, 0, ImGuiWindowFlags_NoScrollbar))
     {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImGui::PushStyleColor(ImGuiCol_Text, palette[(int)TextEditor::PaletteIndex::LineNumber]);
@@ -405,7 +406,7 @@ void MainActivity::OnEditor(const ImRad::CustomWidgetArgs& args)
     textEdit.SetPalette(palette);
     ImRad::PushInvisibleScrollbar();
     ImGui::PushStyleColor(ImGuiCol_ChildBg, textEdit.GetPalette()[(int)TextEditor::PaletteIndex::Background]);
-    if (ImGui::BeginChild("textEdit", { -1, args.size.y }))
+    if (ImGui::BeginChild("textEdit", { -1, sizeY }))
     {
         ImRad::ScrollWhenDragging(true);
 

@@ -10,9 +10,9 @@ User code must contain *void draw()* function which will be called upon renderin
 
 ### Types
 
-using *clr* = unsigned;
+using *ucolor* = unsigned;
 
-clr *RGB*(char r, char g, char b, char a = 255);
+ucolor *RGB*(char r, char g, char b, char a = 255);
 
 struct *vec2* { 
    float x, y; 
@@ -27,13 +27,15 @@ struct *DateTime* {
 
 void *circle*(float x, float y, float radius);
 
-void *color*(clr c);
+void *color*(ucolor c);
 
 void *fillCircle*(float x, float y, float radius);
 
 void *fillQuad*(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
 
-void *fillRect*(float x, float y, float w, float h);
+void *fillRect*(float x1, float y1, float x2, float y2);
+
+void *fillRectWH*(float x1, float y1, float w, float h);
 
 void *fillTriangle*(float x1, float y1, float x2, float y2, float x3, float y3);
 
@@ -61,6 +63,6 @@ bool *mouseDown*(int button = 0);
 
 vec2 *mousePos*();
 
-vc2 *mouseDelta*();
+vec2 *mouseDelta*();
 
-bool *keyDown*(int key);
+void *playSound*(StringView path);

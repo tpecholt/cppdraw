@@ -30,6 +30,7 @@ void BuildOutput::Draw()
 {
     /// @style material
     /// @unit dp
+    height = 0;
     /// @begin TopWindow
     auto* ioUserData = (ImRad::IOUserData*)ImGui::GetIO().UserData;
     const float dp = ioUserData->dpiScale;
@@ -52,6 +53,7 @@ void BuildOutput::Draw()
         /// @separator
 
         // TODO: Add Draw calls of dependent popup windows here
+        height = ioUserData->WorkRect().GetHeight() - ImGui::GetCursorScreenPos().y;
 
         /// @begin Table
         if (ImGui::BeginTable("table1", 3, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX, { -1, 0 }))
@@ -89,6 +91,7 @@ void BuildOutput::Draw()
                 ImGui::PushID(i);
                 ImGui::TableNextRow(0, 40*dp);
                 ImGui::TableSetColumnIndex(0);
+                OnBeginRow();
                 /// @separator
 
                 /// @begin Text
@@ -127,12 +130,6 @@ void BuildOutput::Draw()
     ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     /// @end TopWindow
-        sel = newSel;
-        
-        sel = newSel;
-        
-        sel = newSel;
-        
 }
 
 int BuildOutput::ParseOutput(std::string_view str, std::string_view fname)
@@ -196,7 +193,7 @@ int BuildOutput::ParseOutput(std::string_view str, std::string_view fname)
 void BuildOutput::OnBeginRow()
 {
     if (ImGui::TableGetRowIndex() == sel)
-        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_ButtonActive));
+        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
 }
 
 void BuildOutput::OnItemHovered()

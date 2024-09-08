@@ -1,8 +1,12 @@
 #pragma once
 //#include <string_view> //todo: provide lightweight version to speed up compile time
+//#include <cmath>
+//#include <cstring>
 #include <stddef.h>
-#include <cstring>
-#include <cmath>
+
+namespace std {
+    size_t strlen(const char*);
+}
 
 const int CPPDRAW_PORT = 5551;
 
@@ -27,7 +31,7 @@ private:
     size_t size_;
 };
 
-using clr = unsigned;
+using ucolor = unsigned;
 
 struct vec2 {
     float x, y;
@@ -45,7 +49,6 @@ struct vec2 {
     vec2& operator*= (float f) { *this = *this * f; return *this; }
     vec2& operator/= (float f) { *this = *this / f; return *this; }
     friend float dot(vec2 a, vec2 b) { return a.x * b.x + a.y * b.y; }
-    friend float norm(vec2 a) { return std::sqrt(dot(a, a)); }
     friend float cross(vec2 a, vec2 b) { return a.x*b.y - a.y*b.x; }
 };
 
@@ -62,38 +65,41 @@ struct DrawCmd {
     float time;
     float timeDelta;
     DateTime dateTime;
-    bool keys[64];
+    bool keys[128];
 };
 
 struct LineShape {
     float x1, y1, x2, y2;
-    clr color;
+    ucolor color;
     float thick;
 };
 struct RectShape {
     float x1, y1, x2, y2;
-    clr color;
+    ucolor color;
     float thick;
 };
 struct CircleShape {
     float x1, y1, r;
-    clr color;
+    ucolor color;
     float thick;
 };
 struct TriangleShape {
     float x1, y1, x2, y2, x3, y3;
-    clr color;
+    ucolor color;
 };
 struct TextShape {
     float x1, y1;
     size_t text;
     size_t font;
     float size;
-    clr color;
+    ucolor color;
+};
+struct SoundData {
+    size_t path;
 };
 
 struct Shape {
-    enum Kind { Line, Rect, FillRect, FillTriangle, Circle, FillCircle, Text };
+    enum Kind { Line, Rect, FillRect, FillTriangle, Circle, FillCircle, Text, Sound };
     Kind kind;
     union {
         LineShape l;
@@ -101,15 +107,16 @@ struct Shape {
         CircleShape c;
         TriangleShape t;
         TextShape x;
+        SoundData s;
     };
     Shape(Kind k);
 };
 
-clr RGB(unsigned char r, unsigned char g, unsigned char b, unsigned char a=255);
+ucolor RGB(unsigned char r, unsigned char g, unsigned char b, unsigned char a=255);
 
 //rendering
 
-void color(clr c);
+void color(ucolor c);
 
 void font(ZStringView name, float fontSize);
 
@@ -124,6 +131,8 @@ void circle(float x1, float y1, float r);
 void text(float x, float y, ZStringView text);
 
 void fillRect(float x1, float y1, float x2, float y2);
+
+void fillRectWH(float x1, float y1, float w, float h);
 
 void fillTriangle(float x1, float y1, float x2, float y2, float x3, float y3);
 
@@ -141,13 +150,15 @@ float timeDelta();
 
 DateTime dateTime();
 
+bool keyPressed(int key);
+
 bool mouseDown(int button = 0);
 
 vec2 mousePos();
 
 vec2 mouseDelta();
 
-bool keyDown(int key);
+void playSound(ZStringView path);
 
 //
 

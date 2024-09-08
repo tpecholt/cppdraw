@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 DrawCmd cmd;
-clr color_;
+ucolor color_;
 float thickness_;
 //std::string fontName_;
 float fontSize_;
@@ -29,7 +29,7 @@ Shape::Shape(Kind k)
 : kind(k)
 {}
 
-clr RGB(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+ucolor RGB(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
     return (a << 24) | (b << 16) | (g << 8) | r;
 }
@@ -69,14 +69,14 @@ vec2 mouseDelta()
     return cmd.mouseDelta;
 }
 
-bool keyDown(int key)
+bool keyPressed(int key)
 {
     if (key < 0 || key >= std::size(cmd.keys))
         return false;
     return cmd.keys[key];
 }
 
-void color(clr c)
+void color(ucolor c)
 {
     color_ = c;
 }
@@ -124,6 +124,11 @@ void fillRect(float x1, float y1, float x2, float y2)
     sh.r.y2 = y2;
     sh.r.color = color_;
     shapes_.push_back(sh);
+}
+
+void fillRectWH(float x1, float y1, float w, float h)
+{
+    fillRect(x1, y1, x1+w, y1+h);
 }
 
 void fillTriangle(float x1, float y1, float x2, float y2, float x3, float y3)
@@ -179,13 +184,19 @@ void text(float x, float y, ZStringView text)
     shapes_.push_back(sh);
 }
 
+void playSound(ZStringView path)
+{
+    Shape sh(Shape::Sound);
+    sh.s.path = strBuffer_.size();
+    strBuffer_.insert(strBuffer_.end(), path.begin(), path.end() + 1);
+    shapes_.push_back(sh);
+}
+
 int main()
 {
     strBuffer_.reserve(1024 * 1024);
-    FILE* vole = fopen("vole.txt", "w");
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        fprintf(vole, "can't socket"); fclose(vole);
         fprintf(stdout, "can't create socket (%d)\n", errno);
         return 1;
     }
@@ -195,21 +206,17 @@ int main()
     serv_addr.sin_port = htons(CPPDRAW_PORT);
     int enable = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable))) {
-        fprintf(vole, "can't setsockopt"); fclose(vole);
         fprintf(stdout, "can't setsockopt (%d)\n", errno);
         return 2;
     }
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-        fprintf(vole, "can't bind"); fclose(vole);
         fprintf(stdout, "can't bind (%d)\n", errno);
         return 2;
     }
     if (listen(sockfd, 5) < 0) {
-        fprintf(vole, "can't listen"); fclose(vole);
         fprintf(stdout, "can't listen (%d)\n", errno);
         return 2;
     }
-    fprintf(vole, "listening\n"); fflush(vole);
     fprintf(stdout, "listening...\n"); //important to use \n
     sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
@@ -218,14 +225,12 @@ int main()
         fprintf(stdout, "can't accept (%d)\n", errno);
         return 3;
     }
-    fprintf(vole, "accepted\n"); fflush(vole);
     fprintf(stdout, "connection accepted\n");
     while (true) {
         char buffer[256];
         int n = read(newsockfd, buffer, sizeof(buffer));
         if (n != sizeof(DrawCmd)) {
-            fprintf(vole, "read error\n");
-            fflush(vole);
+            fprintf(stdout, "read error\n");
             break;
         }
         cmd = *(const DrawCmd*)buffer;
@@ -236,23 +241,23 @@ int main()
         uint32_t num = htonl(strBuffer_.size());
         n = write(newsockfd, (void*)&num, 4);
         if (n < 0) {
-            fprintf(vole, "write error\n");
+            fprintf(stdout, "write error\n");
             break;
         }
         n = write(newsockfd, strBuffer_.data(), strBuffer_.size());
         if (n < 0) {
-            fprintf(vole, "write error\n");
+            fprintf(stdout, "write error\n");
             break;
         }
         num = htonl(shapes_.size());
         n = write(newsockfd, (void*)&num, 4);
         if (n < 0) {
-            fprintf(vole, "write error\n");
+            fprintf(stdout, "write error\n");
             break;
         }
         n = write(newsockfd, shapes_.data(), shapes_.size() * sizeof(Shape));
         if (n < 0) {
-            fprintf(vole, "write error\n");
+            fprintf(stdout, "write error\n");
             break;
         }
 
@@ -260,7 +265,5 @@ int main()
 
     close(newsockfd);
     close(sockfd);
-    fprintf(vole, "finished!\n");
-    fclose(vole);
     return 0;
 }

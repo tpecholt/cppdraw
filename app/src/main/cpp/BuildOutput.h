@@ -21,7 +21,7 @@ public:
 
     std::vector<OutputRow> output;
     int sel = -1;
-    int newSel;
+    float height = 0;
     /// @end interface
 
     int ParseOutput(std::string_view output, std::string_view fname);
@@ -37,6 +37,7 @@ private:
     ImRad::ModalResult modalResult;
     ImRad::Animator animator;
     ImVec2 animPos;
+    int newSel;
     /// @end impl
 };
 
